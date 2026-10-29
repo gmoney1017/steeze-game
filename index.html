@@ -216,6 +216,30 @@ body.touch #tr { right: 76px; }
   .scr-foot { gap: 4px 12px; padding-left: 12px; padding-right: 12px; font-size: 13px; }
   .scr-foot button { font-size: 13px; padding: 8px 4px; }
 }
+/* console-style boot */
+#boot { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: #0b0c0e; color: var(--chalk); transition: opacity .6s ease, background .6s ease; }
+#boot.ph-start { background: linear-gradient(0deg, rgba(10,11,13,.94) 0%, rgba(10,11,13,.3) 48%, rgba(10,11,13,.6) 100%); }
+#boot.out { opacity: 0; pointer-events: none; }
+.booting #title, .booting #hud, .booting #touchui { visibility: hidden; }
+#bootStudio { display: grid; justify-items: center; gap: 18px; opacity: 0; }
+#bootStudio .vmark { width: min(120px, 28vw); color: var(--chalk); }
+#bootStudio .vname { font: 600 15px var(--ui); letter-spacing: .5em; padding-left: .5em; color: var(--chalk); }
+#bootLoad, #bootStart { display: grid; justify-items: center; gap: 18px; padding: 0 16px; text-align: center; }
+#boot [hidden] { display: none !important; }
+#boot .b-word { font-family: var(--display); font-size: clamp(54px, 12vw, 96px); line-height: .9; transform: skewX(-9deg); text-shadow: 0 6px 0 rgba(0,0,0,.55); }
+#boot .b-word span { color: var(--curb); }
+#boot .b-word.big { font-size: clamp(70px, 17vw, 150px); }
+#boot .b-bar { width: min(420px, 72vw); height: 8px; border-radius: 999px; background: rgba(239,235,225,.12); overflow: hidden; }
+#boot .b-bar i { display: block; height: 100%; width: 0; background: var(--curb); border-radius: 999px; }
+#boot .b-pct { font: 700 12px var(--mono); letter-spacing: .14em; color: var(--dust); margin-top: -8px; }
+#boot .b-tip { max-width: min(560px, 88vw); min-height: 3em; font: 500 15px/1.45 var(--ui); color: var(--dust); }
+#boot .b-online { font: 700 12px var(--mono); letter-spacing: .1em; color: #7fd18b; }
+#boot .b-online::before { content: '\25CF  '; }
+#bootStart { align-self: end; padding-bottom: calc(10vh + env(safe-area-inset-bottom, 0px)); }
+#boot .b-press { font: 400 clamp(16px, 3.2vw, 22px) var(--display); letter-spacing: .3em; padding-left: .3em; animation: pressBlink 1.3s ease-in-out infinite; }
+@keyframes pressBlink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+#boot .b-foot { font: 600 11px var(--ui); letter-spacing: .2em; color: var(--dust); margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { #boot .b-press { animation: none; } }
 @media (prefers-reduced-motion: reduce) {
   #feed div, .press { animation: none; }
   #callout, #toast, #mult, .item::before { transition: none; }
@@ -224,6 +248,25 @@ body.touch #tr { right: 76px; }
 
 <canvas id="view" tabindex="0" aria-label="Steeze game view"></canvas>
 <div id="loading">LOADING…</div>
+<div id="boot" hidden>
+  <div id="bootStudio">
+    <svg class="vmark" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" stroke-width="6"/><path d="M34 34 L52 34 L60 66 L68 34 L86 34 L66 88 L54 88 Z" fill="currentColor"/></svg>
+    <div class="vname">VERTEK STUDIOS</div>
+  </div>
+  <div id="bootLoad" hidden>
+    <div class="b-word">STEE<span>Z</span>E</div>
+    <div class="b-bar"><i id="bootFill"></i></div>
+    <div class="b-pct" id="bootPct">0%</div>
+    <div class="b-tip" id="bootTip"></div>
+    <div class="b-online" id="bootOnline" hidden></div>
+  </div>
+  <div id="bootStart" hidden>
+    <div class="b-word big">STEE<span>Z</span>E</div>
+    <div class="b-press" id="bootPress">PRESS ANY KEY</div>
+    <div class="b-online" id="bootOnline2" hidden></div>
+    <div class="b-foot">&copy; 2026 Vertek Studios</div>
+  </div>
+</div>
 
 <div class="hud" id="hud" hidden>
   <div id="tl">
@@ -350,7 +393,7 @@ const DEFAULTS = {
   monitor: true, hints: true, trickNames: true,
   t_flips: true, t_shoves: true, t_360: true, t_nollie: true, t_manual: true, t_grabs: true, t_plant: true, t_slide: true, t_adjust: true,
   camPreset: 'classic', fov: 80, camDist: 26, camHeight: 10, camShake: true, airTrack: 35,
-  master: 80, sfx: 90, quality: 'low', resScale: 100, showFps: false
+  master: 80, sfx: 90, music: 60, quality: 'low', resScale: 100, showFps: false
 };
 const S = Object.assign({}, DEFAULTS, store.get('settings', {}));
 for (const k in S) if (!(k in DEFAULTS)) delete S[k];
@@ -2198,9 +2241,26 @@ function extClassify(raw) {
 // the street skater model ships next to the game as street_skater.js (a base64 GLB)
 function extLoad() {
   if (EXT.gltf || EXT.loading) return EXT.loading;
-  EXT.loading = import(new URL('street_skater.js', location.href).href).then(m => { EXT.clipData = m.clips || null; const s = atob(m.default), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; })
+  // read the file piece by piece so the loading screen can show real progress (it is ~8 MB: the model and the board clips)
+  EXT.progress = 0;
+  EXT.loading = (async () => {
+    const r = await fetch(new URL('street_skater.js', location.href).href); if (!r.ok) throw new Error('model file ' + r.status);
+    let text;
+    if (r.body && r.body.getReader) {
+      const rd = r.body.getReader(), parts = [], total = Math.max(+r.headers.get('content-length') || 0, 8.3e6); let got = 0;
+      for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; EXT.progress = Math.min(0.85, 0.85 * got / total); }
+      const all = new Uint8Array(got); let o = 0; for (const p of parts) { all.set(p, o); o += p.length; }
+      text = new TextDecoder().decode(all);
+    } else text = await r.text();
+    EXT.progress = 0.87;
+    const q0 = text.indexOf('"') + 1, q1 = text.indexOf('"', q0), ci = text.indexOf('export const clips = ');
+    try { EXT.clipData = ci >= 0 ? JSON.parse(text.slice(ci + 21, text.lastIndexOf(';'))) : null; } catch (e) { EXT.clipData = null; }
+    const s = atob(text.slice(q0, q1)), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+    EXT.progress = 0.9;
+    return u.buffer;
+  })()
     .then(buf => new GLTFLoader().parseAsync(buf, ''))
-    .then(g => { EXT.gltf = g; EXT.loading = null; extSetup(); if (EXT.err) console.warn(EXT.err); buildLook(LOOK); })
+    .then(g => { EXT.progress = 0.96; EXT.gltf = g; EXT.loading = null; extSetup(); if (EXT.err) console.warn(EXT.err); buildLook(LOOK); EXT.progress = 1; })
     .catch(e => { EXT.err = String(e && e.message || e); EXT.loading = null; console.warn('street skater model failed to load', e); });
   return EXT.loading;
 }
@@ -5676,6 +5736,7 @@ function settingsScreen() {
     { label: 'Audio & Video', items: () => [
       { type: 'slider', key: 'master', label: 'Master volume', min: 0, max: 100, step: 5 },
       { type: 'slider', key: 'sfx', label: 'Effects volume', min: 0, max: 100, step: 5 },
+      { type: 'slider', key: 'music', label: 'Music volume', min: 0, max: 100, step: 5, desc: 'The beat on the title screen and its menus.' },
       { type: 'section', label: 'Video' },
       { type: 'choice', key: 'tod', label: 'Time of day', options: opts('tod'), desc: 'Day, golden hour, sunset, or night with the street lights on and the windows lit.' },
       { type: 'choice', key: 'quality', label: 'Graphics', options: opts('quality'), desc: 'Low-end PC turns off real-time shadows and antialiasing and uses a soft blob shadow. Use it on integrated graphics.' },
@@ -6122,6 +6183,134 @@ function netTick(dt) {
 }
 
 /* =========================================================================
+   BOOT — the console-style start: Vertek Studios logo, the STEEZE loading
+   screen (real progress, tips, who's online), then PRESS START over the
+   title scene. Any button or tap skips ahead; sound starts at Press Start
+   (browsers only allow audio after the player presses something).
+   ========================================================================= */
+const BOOT = { active: false, phase: '', t: 0, tipI: 0, tipT: 0, shown: 0, done: null, tapped: false, leaving: false };
+const BOOT_TIPS = [
+  'Pull the right stick back, then flick it forward to pop. The direction you flick picks the trick.',
+  'Skating with friends? Pick the same spot from Change spot in the pause menu.',
+  'Pause → Online name changes the name other skaters see over your head.',
+  'Your outfit saves by itself, even when the game updates.',
+  'Tap the View button (MAP on phones) for the map. Hold it to watch your last 12 seconds.',
+  'On a phone: drag your left thumb to steer and walk, flick with your right, tap BOARD to step off.',
+  'Ollie onto a rail or ledge to lock into a grind. Lean to keep your balance.',
+  'Carrying your board? Walk up to a spot and press Get on to drop in like a pro.'
+];
+function bootStart(done) {
+  BOOT.active = true; BOOT.done = done; BOOT.tipI = Math.floor(Math.random() * BOOT_TIPS.length);
+  document.body.classList.add('booting'); $('boot').hidden = false; $('loading').hidden = true;
+  bootPhase('studio');
+}
+function bootPhase(p) {
+  BOOT.phase = p; BOOT.t = 0;
+  for (const id of ['bootStudio', 'bootLoad', 'bootStart']) $(id).hidden = true;
+  $({ studio: 'bootStudio', load: 'bootLoad', start: 'bootStart' }[p]).hidden = false;
+  $('boot').className = 'ph-' + p;
+  if (p === 'load') { $('bootTip').textContent = BOOT_TIPS[BOOT.tipI]; BOOT.tipT = 0; }
+}
+// browsers only let sound start inside a real key press / tap, so the overlay listens for those itself
+addEventListener('pointerdown', () => { if (BOOT.active) { BOOT.tapped = true; audio.unlock(); } }, true);
+addEventListener('keydown', () => { if (BOOT.active) audio.unlock(); }, true);
+function bootOnline() {
+  const el = $('bootOnline'), el2 = $('bootOnline2'); if (!NET.room) { el.hidden = el2.hidden = true; return; }
+  const n = [...NET.peers.values()].filter(a => !a.hidden).length;
+  el.hidden = el2.hidden = false; el.textContent = el2.textContent = n ? n + (n === 1 ? ' skater' : ' skaters') + ' online now' : 'Online · be the first one here';
+}
+function bootQuiet() { // something went straight into play (a reload mid-session): just get out of the way
+  BOOT.active = false; BOOT.leaving = false; $('boot').hidden = true; document.body.classList.remove('booting');
+}
+function bootTick(dt) {
+  if (!BOOT.active || BOOT.leaving) return;
+  BOOT.t += dt;
+  const any = BOOT.tapped || pad.down.size > 0 || keyDown.size > 0; BOOT.tapped = false;
+  if (BOOT.phase === 'studio') { // fade in, hold, fade out (driven by the frame clock: CSS animations stall while the model unpacks)
+    const t = BOOT.t, op = t < 0.45 ? t / 0.45 : t > 2.2 ? Math.max(0, 1 - (t - 2.2) / 0.5) : 1, el = $('bootStudio');
+    el.style.opacity = op.toFixed(3); el.style.transform = 'scale(' + (0.95 + 0.05 * Math.min(1, t / 0.45) + 0.02 * Math.max(0, t - 2.2)).toFixed(4) + ')';
+    if (BOOT.t > 2.7 || (any && BOOT.t > 0.15)) bootPhase('load');
+    return;
+  }
+  bootOnline();
+  if (BOOT.phase === 'load') {
+    const want = EXT.err ? 1 : (EXT.progress || 0);
+    BOOT.shown += (want - BOOT.shown) * Math.min(1, dt * 6);
+    $('bootFill').style.width = (BOOT.shown * 100).toFixed(1) + '%'; $('bootPct').textContent = Math.round(BOOT.shown * 100) + '%';
+    BOOT.tipT += dt; if (BOOT.tipT > 4) { BOOT.tipT = 0; BOOT.tipI = (BOOT.tipI + 1) % BOOT_TIPS.length; $('bootTip').textContent = BOOT_TIPS[BOOT.tipI]; }
+    if ((EXT.on || EXT.err) && BOOT.shown > 0.97 && BOOT.t > 0.6) bootPhase('start');
+    return;
+  }
+  // press start
+  $('bootPress').textContent = inp.mode === 'touch' ? 'TAP TO START' : inp.mode === 'pad' ? 'PRESS ANY BUTTON' : 'PRESS ANY KEY';
+  if (any && BOOT.t > 0.35) {
+    BOOT.leaving = true; audio.unlock(); audio.sting(); audio.musicStart();
+    $('boot').classList.add('out');
+    setTimeout(() => { $('boot').hidden = true; document.body.classList.remove('booting'); BOOT.active = false; keyDown.clear(); pad.down.clear(); if (BOOT.done) BOOT.done(); }, 650);
+  }
+}
+
+/* ---- the menu beat: lo-fi boom-bap, 88 BPM, four bars, all synthesized ---- */
+const BEAT = { bpm: 88, chords: [[57, 60, 64, 67], [53, 57, 60, 64], [48, 52, 55, 59], [55, 59, 62, 64]], bass: [45, 41, 48, 43] }; // Am7 Fmaj7 Cmaj7 G6 (MIDI)
+const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+Object.assign(audio, {
+  music: null,
+  musicStart() {
+    if (!this.ctx || this.music) return;
+    const ctx = this.ctx, M = this.music = { next: ctx.currentTime + 0.25, step: 0 };
+    M.out = ctx.createGain(); M.out.gain.value = 0; M.out.connect(this.master);
+    M.lp = ctx.createBiquadFilter(); M.lp.type = 'lowpass'; M.lp.frequency.value = 2600; M.lp.Q.value = 0.4; M.lp.connect(M.out);   // warm, a little dusty
+    M.timer = setInterval(() => this.musicSched(), 30);
+  },
+  musicSched() {
+    const M = this.music, ctx = this.ctx; if (!M || !ctx || ctx.state !== 'running') { if (M && ctx) M.next = ctx.currentTime + 0.1; return; }
+    const s16 = 60 / BEAT.bpm / 4;
+    while (M.next < ctx.currentTime + 0.18) {
+      const st = M.step, s = st % 16, bar = (st >> 4) % 4, t = M.next + (s % 2 ? s16 * 0.16 : 0);   // a lazy swing on the off 16ths
+      if (s === 0 || s === 10 || (s === 7 && bar % 2)) this.mKick(t);
+      if (s === 4 || s === 12) this.mSnare(t);
+      if (s % 2 === 0) this.mHat(t, s % 4 === 2 ? 0.06 : 0.035, bar === 3 && s === 14);
+      if (s === 0) { this.mChord(t, BEAT.chords[bar], s16 * 15); this.mBass(t, BEAT.bass[bar], s16 * 7); }
+      if (s === 10) this.mBass(t, BEAT.bass[bar] + (bar === 3 ? 2 : 0), s16 * 5);
+      if (Math.random() < 0.05) this.mCrackle(t);
+      M.next += s16; M.step = (st + 1) % 64;
+    }
+  },
+  mVoice(t, dur, peak, attack = 0.005) { const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); g.connect(this.music.lp); return g; },
+  mKick(t) { const o = this.ctx.createOscillator(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.18); o.connect(this.mVoice(t, 0.32, 0.55)); o.start(t); o.stop(t + 0.35); },
+  mSnare(t) {
+    const n = this.ctx.createBufferSource(); n.buffer = this.noise; const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 0.7;
+    n.connect(f); f.connect(this.mVoice(t, 0.2, 0.32)); n.start(t, Math.random()); n.stop(t + 0.22);
+    const o = this.ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = 190; o.connect(this.mVoice(t, 0.1, 0.15)); o.start(t); o.stop(t + 0.12);
+  },
+  mHat(t, g, open) { const n = this.ctx.createBufferSource(); n.buffer = this.noise; const f = this.ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000; n.connect(f); f.connect(this.mVoice(t, open ? 0.25 : 0.05, g)); n.start(t, Math.random()); n.stop(t + 0.3); },
+  mBass(t, m, dur) { const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.value = mtof(m); o.connect(this.mVoice(t, dur, 0.32, 0.02)); o.start(t); o.stop(t + dur + 0.05); },
+  mChord(t, notes, dur) { // soft electric-piano stab: triangle + a detuned sine per note
+    for (const m of notes) for (const [type, det, g] of [['triangle', 0, 0.05], ['sine', 7, 0.04]]) {
+      const o = this.ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m + 12); o.detune.value = det; o.connect(this.mVoice(t, dur, g, 0.03)); o.start(t); o.stop(t + dur + 0.05);
+    }
+  },
+  mCrackle(t) { const n = this.ctx.createBufferSource(); n.buffer = this.noise; const f = this.ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 3000; n.connect(f); f.connect(this.mVoice(t, 0.02, 0.05, 0.001)); n.start(t, Math.random()); n.stop(t + 0.03); },
+  musicTick() { // the beat plays on the title and its menus, and fades out once you drop in
+    const M = this.music; if (!M || !this.ctx) return;
+    const onTitle = mode === 'title' || (mode === 'menu' && UI.stack[0] && UI.stack[0].id === 'title');
+    M.out.gain.setTargetAtTime(onTitle && !document.hidden ? (S.music / 100) * 0.55 : 0, this.ctx.currentTime, onTitle ? 0.5 : 0.35);
+  },
+  sting() { // Press Start: a whoosh up into a board clack and a chord that blooms
+    if (!this.ctx) return; const ctx = this.ctx, t = ctx.currentTime;
+    const n = ctx.createBufferSource(); n.buffer = this.noise; const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(3500, t + 0.45);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+    n.connect(f); f.connect(g); g.connect(this.master); n.start(t); n.stop(t + 0.6);
+    setTimeout(() => { this.pop(1); this.land(6); }, 430);
+    for (const [m, d] of [[45, 0], [52, 0.03], [55, 0.06], [59, 0.09], [60, 0.12], [64, 0.15]]) {
+      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = mtof(m + 12); const gg = ctx.createGain(), at = t + 0.45 + d;
+      gg.gain.setValueAtTime(0.0001, at); gg.gain.exponentialRampToValueAtTime(0.07, at + 0.04); gg.gain.exponentialRampToValueAtTime(0.0001, at + 2.2);
+      o.connect(gg); gg.connect(this.master); o.start(at); o.stop(at + 2.3);
+    }
+  }
+});
+
+/* =========================================================================
    GAME LOOP
    ========================================================================= */
 let clock = 0, acc = 0, last = performance.now();
@@ -6136,7 +6325,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (!(window.__steeze && window.__steeze.hold)) tick(dt);
   if (window.__steeze && window.__steeze.camOverride) window.__steeze.camOverride(camera, P, skater);
-  extPose(); try { netTick(dt); } catch (e) { } touchUiTick(); renderer.render(scene, camera);
+  extPose(); try { netTick(dt); } catch (e) { } touchUiTick(); audio.musicTick(); if (BOOT.active && !BOOT.leaving && mode !== 'title' && mode !== 'menu') bootQuiet(); renderer.render(scene, camera);
   if (previewDue && now > previewDue && (mode === 'play' || mode === 'title')) { // remember what this spot looks like for the spot menu
     previewDue = 0;
     try { const c = document.createElement('canvas'); c.width = 384; c.height = 216; const g = c.getContext('2d'); const a = canvas.width / canvas.height, sw = a > 16 / 9 ? canvas.height * 16 / 9 : canvas.width, sh = sw * 9 / 16; g.drawImage(canvas, (canvas.width - sw) / 2, (canvas.height - sh) / 2, sw, sh, 0, 0, 384, 216); store.set('prev_' + curMap + '_' + S.tod, c.toDataURL('image/jpeg', 0.72)); } catch (e) { }
@@ -6147,7 +6336,7 @@ function tick(dt) {
   if (window.__steeze && window.__steeze.override) window.__steeze.override(inp, pad);
   if (mode === 'play') gameTick(dt);
   else if (mode === 'menu' || mode === 'title') {
-    menuInput(dt);
+    if (BOOT.active) bootTick(dt); else menuInput(dt);
     clock += dt;
     if (CL.on) closetTick(dt);
     if (mode === 'title') { animate(dt, clock); stepCamera(dt, true); updateTOD(dt); }
@@ -6222,7 +6411,7 @@ function boot(saved) {
   if (saved && typeof saved.total === 'number') total = saved.total;
   loadMap(S.map);
   $('loading').hidden = true;
-  if (saved && saved.mode === 'play') setMode2('play'); else openScreen(titleScreen());
+  if (saved && saved.mode === 'play') setMode2('play'); else { openScreen(titleScreen()); bootStart(); } // logo -> loading -> press start, over the title scene
   requestAnimationFrame(frame);
 }
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); if (renderer) renderer.setSize(innerWidth, innerHeight, false); });
@@ -6242,7 +6431,7 @@ window.__steeze = {
   replayBegin() { if (rep.frames.length < 2) return null; rep.live = snapTransforms(); rep.t0 = rep.frames[0].t; rep.t1 = rep.frames[rep.frames.length - 1].t; return [rep.t0, rep.t1]; },
   replaySeek(t) { const fr = frameAt(t); applyTransforms(fr.f); if (sun) { sun.position.copy(skater.position).addScaledVector(todSun, 30); sun.target.position.copy(skater.position); } return fr.p; },
   replayEnd() { if (rep.live) applyTransforms(rep.live); if (BOARD.attached) { leanG.add(boardRig); boardRig.position.set(0, 0, 0); boardRig.quaternion.identity(); } else placeBoardMesh(); },
-  BOARD, poles, applyTOD, loadMap, setLook, LOOK, LOOK_OPTS, B, openCloset, closeCloset, CL, BOARD_PARTS, EXT, THREE_V: THREE.Vector3, MAPS, STYLES, get curMap() { return curMap; }, SPOTS, LAMPS, camera, world, bail, getOff, getOn, callBoard, dropBoard, pickUpBoard, nearBoard, probe, R, skater, boardRig, CT, carryRest, NET, CLIP, store, TOUCHB
+  BOARD, poles, applyTOD, loadMap, setLook, LOOK, LOOK_OPTS, B, openCloset, closeCloset, CL, BOARD_PARTS, EXT, THREE_V: THREE.Vector3, MAPS, STYLES, get curMap() { return curMap; }, SPOTS, LAMPS, camera, world, bail, getOff, getOn, callBoard, dropBoard, pickUpBoard, nearBoard, probe, R, skater, boardRig, CT, carryRest, NET, CLIP, store, TOUCHB, audio, BOOT
 };
 onlineStart(); // multiplayer + account save, when the platform offers them
 </script>
