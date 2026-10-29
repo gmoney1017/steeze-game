@@ -5603,6 +5603,7 @@ function pauseScreen() {
       { label: P.marker ? 'Go to session marker' : 'Set session marker here', sub: P.marker ? 'Hold ' + glyph('Up') + ' in game to move it' : 'Only works while rolling on the ground', run: () => { if (P.marker) { respawn(P.marker); closeAllToPlay(); } else if (P.state === 'ground') { setMarker(); closeAllToPlay(); } else toast('Get on the ground to drop a marker'); } },
       { label: 'Restart at the start', run: () => { P.marker = null; respawn(SPAWN); loseLineQuiet(); closeAllToPlay(); } },
       { type: 'section', label: 'Game' },
+      ...(NET.room && NET.room.kind === 'supa' ? [{ label: 'Online name', value: escapeHtml(NET.name), run: () => { netRename(); renderScreen(); } }] : []),
       { label: 'Settings', run: () => openScreen(settingsScreen()) },
       { label: 'Controls', run: () => openScreen(controlsScreen()) },
       { label: 'How to flick', run: () => openScreen(howScreen()) },
@@ -5917,14 +5918,59 @@ function adjustLook(it, d) {
 const NET = { room: null, user: null, peers: new Map(), sendT: 0, lookDirty: true, shown: 0 };
 const NET_MAX = 6;          // other skaters drawn at once (low-end PCs)
 const CLOUD = { ref: null, t: 0 };
+// Outside Claude (the website), or wherever Claude can't connect someone, players meet through the studio's Supabase project
+// instead: presence (who's here, look, spot, name) plus a short "pose" broadcast while they move. The key below is the
+// project's publishable key, which is meant to sit in web pages.
+const SUPA = { url: 'https://ticgvfdcskkiubbvmnfs.supabase.co', key: 'sb_publishable_c1oql1LvKjozFF8m-86-6A_6uQQudhb', lib: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm', channel: 'steeze-lobby' };
+NET.name = (() => { let n = store.get('netName', ''); if (!n) { n = 'Skater' + Math.floor(1000 + Math.random() * 9000); store.set('netName', n); } return n; })();
+function netCleanName(s) { return String(s || '').replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, '').trim().slice(0, 20); }
+function netRename() {
+  const n = netCleanName(prompt('Your online name (other skaters see this)', NET.name));
+  if (!n) return; NET.name = n; store.set('netName', n); toast('<b>Online name</b> ' + escapeHtml(n));
+}
 async function onlineStart() {
-  const C = window.claude; if (!C || typeof C.use !== 'function') return;
-  C.use('user').then(u => { NET.user = u; return u ? C.use('db').then(db => db && cloudStart(u, db)) : null; }).catch(() => { });
-  try {
-    const room = await C.use('room'); if (!room) return;
-    NET.room = room;
-    room.onPeers(netPeers, () => netEnd());
-  } catch (e) { }
+  const C = window.claude;
+  if (C && typeof C.use === 'function') {
+    C.use('user').then(u => { NET.user = u; return u ? C.use('db').then(db => db && cloudStart(u, db)) : null; }).catch(() => { });
+    try { const room = await C.use('room'); if (room) { NET.room = room; room.onPeers(netPeers, () => netEnd()); return; } } catch (e) { }
+  }
+  try { const room = await supaRoom(); NET.room = room; room.onPeers(netPeers); netCount(); } catch (e) { console.warn('online play unavailable', e && e.message || e); }
+}
+async function supaRoom() {
+  const { createClient } = await import(SUPA.lib);
+  const sb = createClient(SUPA.url, SUPA.key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }, realtime: { params: { eventsPerSecond: 12 } } });
+  const me = 'p' + Math.random().toString(36).slice(2, 10);
+  const ch = sb.channel(SUPA.channel, { config: { presence: { key: me }, broadcast: { self: false } } });
+  const peers = new Map(), handlers = []; let mine = {}, tracked = '';
+  const tell = (joined, left, updated) => { const all = [...peers.values()]; for (const h of handlers) h({ peers: all, joined, left, updated }); };
+  const mk = (id) => ({ peer: id, by: null, isMe: false, sameTab: false, kind: 'viewer', guest: false, presence: {} });
+  ch.on('presence', { event: 'sync' }, () => {
+    const st = ch.presenceState(), seen = new Set(), joined = [], updated = [], left = [];
+    for (const id in st) {
+      if (id === me) continue; seen.add(id);
+      const m = (st[id] && st[id][0]) || {}; let p = peers.get(id); const fresh = !p; if (!p) { p = mk(id); peers.set(id, p); }
+      p.presence = Object.assign({}, p.presence, { v: m.v, m: m.m, h: m.h, l: m.l, n: m.n });
+      (fresh ? joined : updated).push(p);
+    }
+    for (const [id, p] of peers) if (!seen.has(id)) { peers.delete(id); left.push(p); }
+    tell(joined, left, updated);
+  });
+  ch.on('broadcast', { event: 'pose' }, (msg) => {
+    const d = msg && msg.payload; if (!d || typeof d.id !== 'string' || d.id === me || typeof d.s !== 'string') return;
+    const p = peers.get(d.id); if (!p) return;
+    p.presence = Object.assign({}, p.presence, { s: d.s, m: d.m, h: d.h }); tell([], [], [p]);
+  });
+  await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('timeout')), 15000); ch.subscribe((s) => { if (s === 'SUBSCRIBED') { clearTimeout(t); res(); } else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') { clearTimeout(t); rej(new Error(s)); } }); });
+  return {
+    kind: 'supa',
+    async presence(patch) {
+      for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; }
+      const slow = { v: mine.v, m: mine.m, h: mine.h, l: mine.l, n: mine.n }, js = JSON.stringify(slow);
+      if (js !== tracked) { tracked = js; ch.track(slow); }
+      if (typeof patch.s === 'string') ch.send({ type: 'broadcast', event: 'pose', payload: { id: me, s: patch.s, m: mine.m, h: mine.h } });
+    },
+    onPeers(h) { handlers.push(h); return () => { }; }
+  };
 }
 // ---- your look, kept with your account ----
 async function cloudStart(user, db) {
@@ -5993,6 +6039,7 @@ function netUpdate(p) {
     try { const raw = JSON.parse(pr.l), L = Object.assign({}, LOOK_DEFAULT); for (const k in LOOK_DEFAULT) if (raw && typeof raw[k] === 'string') L[k] = raw[k]; a.look = cleanLook(L); a.lookDirty = true; } catch (e) { }
   }
   a.map = typeof pr.m === 'string' ? pr.m : ''; a.hidden = !!pr.h;
+  if (!a.by && typeof pr.n === 'string') { const n = netCleanName(pr.n) || 'Skater'; if (n !== a.name) { a.name = n; if (a.av) a.av.label.textContent = n; } }
   if (typeof pr.s === 'string' && pr.s.length < 4000) { const st = netDecode(pr.s); if (st) { a.st = st; a.t = performance.now(); } }
 }
 async function netName(a) {
@@ -6044,14 +6091,15 @@ function netTick(dt) {
   // send yours
   NET.sendT -= dt;
   if (NET.sendT <= 0) {
-    NET.sendT = 0.1;
     const hidden = CL.on || mode === 'title' || mode === 'replay';
-    const patch = { v: 1, m: curMap, h: hidden ? 1 : 0, s: hidden ? null : netEncode() };
+    const still = (P.state === 'walk' && P.walk.speed < 0.05) || (P.state === 'ground' && P.s < 0.05 && P.pushT < 0);
+    NET.sendT = NET.room.kind === 'supa' ? (hidden ? 2 : still ? 0.7 : 0.15) : 0.1;   // the website relay is metered: ~6 a second while moving
+    const patch = { v: 1, m: curMap, h: hidden ? 1 : 0, n: NET.name, s: hidden ? null : netEncode() };
     if (NET.lookDirty) { patch.l = JSON.stringify(LOOK); NET.lookDirty = false; }
     NET.room.presence(patch).catch(() => { });
   }
   // draw theirs
-  const k = Math.min(1, dt * 14), now = performance.now();
+  const k = Math.min(1, dt * (NET.room.kind === 'supa' ? 9 : 14)), now = performance.now();
   let shown = 0;
   for (const a of NET.peers.values()) {
     const show = a.st && !a.hidden && a.map === curMap && mode !== 'replay' && !CL.on && now - a.t < 6000 && shown < NET_MAX;
