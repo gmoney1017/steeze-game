@@ -191,6 +191,35 @@ button:focus-visible { outline: 2px solid var(--curb); outline-offset: 2px; }
 .press { font-family: var(--mono); font-size: 13px; color: var(--dust); letter-spacing: .08em; display: flex; align-items: center; gap: 8px; animation: blink 1.6s ease-in-out infinite; }
 @keyframes blink { 50% { opacity: .45; } }
 #loading { position: fixed; inset: 0; display: grid; place-items: center; font-family: var(--mono); color: var(--dust); font-size: 13px; letter-spacing: .1em; }
+/* ---- main menu: console home screen ---- */
+#title { background: linear-gradient(0deg, rgba(9,10,12,.92) 0%, rgba(9,10,12,.55) 30%, rgba(9,10,12,0) 55%, rgba(9,10,12,0) 78%, rgba(9,10,12,.55) 100%); grid-template-rows: auto 1fr auto; }
+#title .t-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: calc(26px + env(safe-area-inset-top, 0px)) max(36px, env(safe-area-inset-right, 0px)) 0 max(36px, env(safe-area-inset-left, 0px)); }
+#title .word { font-size: clamp(44px, 7vw, 84px); }
+.t-card { display: flex; align-items: center; gap: 10px; background: rgba(14,15,17,.6); border: 1px solid rgba(239,235,225,.14); border-radius: 999px; padding: 6px 16px 6px 6px; color: var(--chalk); font: 600 14px var(--ui); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.t-card .t-badge { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 400 16px var(--display); font-style: normal; color: #111; background: var(--curb); }
+.t-card span { display: grid; text-align: left; line-height: 1.15; }
+.t-card small { font: 600 10px var(--mono); letter-spacing: .14em; color: var(--dust); text-transform: uppercase; }
+.t-news { position: absolute; top: calc(118px + env(safe-area-inset-top, 0px)); left: max(36px, env(safe-area-inset-left, 0px)); width: min(300px, 40vw); padding: 14px 16px; border-radius: 12px; background: rgba(14,15,17,.55); border: 1px solid rgba(239,235,225,.1); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.t-news b { font: 700 11px var(--mono); letter-spacing: .18em; color: var(--curb); }
+.t-news ul { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; font: 500 13px/1.35 var(--ui); color: var(--dust); }
+.t-news em { font-style: normal; font-weight: 700; color: var(--chalk); }
+#title .scr-body { display: block; align-self: end; padding: 0 max(36px, env(safe-area-inset-right, 0px)) 0 max(36px, env(safe-area-inset-left, 0px)); }
+#title .side { display: none; }
+#title .list.tiles { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 12px; overflow: visible; padding: 12px 0 6px; }
+.tile { position: relative; height: clamp(120px, 21vh, 176px); border-radius: 14px; border: 1px solid rgba(239,235,225,.12); background: rgba(16,17,19,.72) center / cover no-repeat; color: var(--chalk); text-align: left; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; overflow: hidden; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background-color .16s ease; }
+.tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(9,10,12,.88) 0%, rgba(9,10,12,.15) 70%); z-index: 0; }
+.tile > * { position: relative; z-index: 1; }
+.tile svg { position: absolute; top: 14px; left: 16px; width: 28px; height: 28px; color: var(--dust); transition: color .16s; }
+.tile .tl { font: 400 clamp(17px, 2vw, 24px)/1 var(--display); letter-spacing: .01em; transform: skewX(-8deg); transform-origin: left; }
+.tile .ts { font: 600 12px var(--ui); color: var(--dust); }
+.tile.big .tl { font-size: clamp(24px, 3vw, 36px); }
+.tile.focus { transform: translateY(-6px) scale(1.035); border-color: var(--curb); box-shadow: 0 0 0 2px var(--curb), 0 14px 34px rgba(0,0,0,.5), 0 0 40px rgba(245,197,24,.22); }
+.tile.focus svg { color: var(--curb); }
+.tile.focus .ts { color: var(--chalk); }
+.tile .play { position: absolute; right: 14px; bottom: 14px; width: 38px; height: 38px; border-radius: 50%; background: var(--curb); color: #111; display: grid; place-items: center; font-size: 15px; z-index: 1; }
+#title .scr-foot { padding-top: 10px; }
+@media (max-width: 900px) { .t-news { display: none; } #title .list.tiles { grid-template-columns: repeat(5, minmax(128px, 1fr)); overflow-x: auto; scroll-snap-type: x mandatory; padding: 12px 4px 10px; margin: 0 -4px; } .tile { scroll-snap-align: start; } }
+@media (max-width: 560px) { #title .t-top { padding-left: 16px; padding-right: 16px; } .t-card span { display: none; } .t-card { padding: 4px; } #title .scr-body { padding: 0 12px; } #title .list.tiles { grid-template-columns: repeat(2, 1fr); overflow: visible; } .tile.big { grid-column: 1 / -1; } .tile { height: 104px; } }
 @media (max-width: 760px) {
   .scr-body, #title .scr-body { grid-template-columns: minmax(0, 1fr); }
   .side { display: none; }
@@ -313,12 +342,16 @@ body.touch #tr { right: 76px; }
 </div>
 
 <div class="screen" id="title" hidden>
-  <div class="scr-head">
-    <div class="studio">Vertek Studios presents</div>
+  <div class="t-top">
     <h1 class="word">STEE<span class="z">Z</span>E</h1>
+    <button class="t-card" id="tCard" aria-label="Your player card"><i class="t-badge" id="tBadge">S</i><span><b id="tName">Skater</b><small id="tCardSub">Player</small></span></button>
   </div>
+  <aside class="t-news" aria-label="What's new">
+    <b>WHAT'S NEW</b>
+    <ul><li><em>Multiplayer is live.</em> Skate with everyone at the same spot.</li><li><em>Phone controls.</em> Touch buttons and tappable menus.</li><li><em>Board animations.</em> Kick it up, carry it, drop in.</li></ul>
+  </aside>
   <div class="scr-body">
-    <div class="list" id="titleList"></div>
+    <div class="list tiles" id="titleList"></div>
     <div class="side"></div>
   </div>
   <div class="scr-foot" id="titleFoot"></div>
@@ -2867,6 +2900,7 @@ function tapHold(name, holdTime) {
 /* ------------------------------ haptics ------------------------------ */
 let rumbleUntil = 0;
 function rumble(strong, weak, ms, force) {
+  if (typeof DEMO === 'object' && DEMO.run) return;
   if (!S.vibration || !activePad || !activePad.vibrationActuator) return;
   const now = performance.now();
   if (!force && now < rumbleUntil - 30) return;
@@ -4700,6 +4734,7 @@ function buildCourse() {
 const line = { tricks: [], score: 0, count: {}, idle: 0, active: false };
 let total = 0, best = store.get('best', 0);
 function addTrick(name, value) {
+  if (DEMO.run) return; // the menu autopilot never scores
   const n = name.replace(/ \(sketchy\)| \(scraped\)/, '');
   const rep = line.count[n] || 0; line.count[n] = rep + 1;
   const v = Math.round(value * Math.pow(0.6, rep) / 5) * 5;
@@ -4709,7 +4744,7 @@ function addTrick(name, value) {
 }
 const lineMult = () => Math.min(12, Math.max(1, line.tricks.length));
 function bankLine() {
-  if (!line.active) return;
+  if (!line.active || DEMO.run) return;
   const pts = Math.round(line.score * lineMult());
   total += pts;
   if (pts > best) { best = pts; store.set('best', best); }
@@ -4719,6 +4754,7 @@ function bankLine() {
   $('feed').innerHTML = '';
 }
 function loseLine(reason) {
+  if (DEMO.run) return;
   callout('Bail', reason, true);
   line.tricks = []; line.score = 0; line.count = {}; line.active = false;
   $('feed').innerHTML = '';
@@ -4746,6 +4782,7 @@ const CHALS = [
 ];
 const done = new Set(store.get('chals', []));
 function chal(id) {
+  if (DEMO.run) return;
   const c = CHALS.find(c => c[0] === id);
   if (!c || done.has(id)) return;
   done.add(id); store.set('chals', [...done]);
@@ -5405,7 +5442,7 @@ function feedPush(name, v) {
   f.appendChild(d);
   while (f.children.length > 5) f.removeChild(f.firstChild);
 }
-function toast(html) { const t = $('toast'); t.innerHTML = html; t.classList.add('on'); toastT = 3; }
+function toast(html) { if (typeof DEMO === 'object' && DEMO.run) return; const t = $('toast'); t.innerHTML = html; t.classList.add('on'); toastT = 3; }
 function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 let hintKey = '', fpsN = 0, fpsT = 0; let hintAge = 0;
 function updateHud(dt) {
@@ -5512,10 +5549,11 @@ function renderScreen() {
   scr._items = items;
   const nav = items.map((it, i) => it.type === 'section' ? -1 : i).filter(i => i >= 0);
   if (!nav.includes(scr.focus)) scr.focus = nav[0] ?? 0;
-  listEl.innerHTML = items.map((it, i) => itemHtml(it, i, i === scr.focus)).join('');
+  listEl.innerHTML = items.map((it, i) => scr.tiles ? tileHtml(it, i, i === scr.focus) : itemHtml(it, i, i === scr.focus)).join('');
+  if (isTitle) titleCard();
   listEl.querySelectorAll('[data-i]').forEach(el => {
     const i = +el.dataset.i;
-    el.onmouseenter = () => { if (inp.mode !== 'pad' && scr.focus !== i) { scr.focus = i; refreshFocus(); } };
+    el.onmouseenter = () => { if (inp.mode !== 'pad' && scr.focus !== i) { scr.focus = i; refreshFocus(); if (scr.tiles) audio.tick(); } };
     el.onclick = (e) => { scr.focus = i; const r = el.getBoundingClientRect(); const it = items[i]; if ((it.type === 'slider' || it.type === 'choice' || it.type === 'look') && e.clientX < r.left + r.width * 0.55 && e.clientX > r.left + r.width * 0.3) adjust(-1); else if (it.type === 'slider' || it.type === 'choice' || it.type === 'toggle' || it.type === 'look') adjust(1); else activate(); };
   });
   const foot = isTitle ? $('titleFoot') : $('menuFoot');
@@ -5525,6 +5563,10 @@ function renderScreen() {
   refreshFocus(true);
 }
 function footAct(a) { if (a === 'back') navBack(); else if (a === 'select') activate(); else if (a === 'reset') resetTab(); else { const scr = curScreen(); const f = (scr.foot || []).find(x => x[2] === a); if (f && f[3]) f[3](); } }
+function tileHtml(it, i, focus) {
+  return '<button class="tile' + (it.big ? ' big' : '') + (focus ? ' focus' : '') + '" data-i="' + i + '"' + (it.bg ? ' style="background-image:url(' + it.bg + ')"' : '') + '>' + (TILE_ICON[it.icon] || '')
+    + '<span class="tl">' + escapeHtml(it.label) + '</span><span class="ts">' + escapeHtml(it.sub || '') + '</span>' + (it.big ? '<span class="play">&#9654;</span>' : '') + '</button>';
+}
 function itemHtml(it, i, focus) {
   if (it.type === 'section') return '<div class="sec">' + escapeHtml(it.label) + '</div>';
   const cls = 'item' + (it.big ? ' big' : '') + (focus ? ' focus' : '') + (it.done ? ' done' : '');
@@ -5612,26 +5654,49 @@ function menuInput(dt) {
   if ((pad.down.has('Y') || keyDown.has('KeyF')) && curScreen() && curScreen().id === 'closet') randomLook();
   if (pad.down.has('X') || keyDown.has('KeyR')) { const scr = curScreen(); if (scr && scr.tabs && scr.resetTab) resetTab(); }
 }
-function navDir(d) { if (d === 'up') moveFocus(-1); else if (d === 'down') moveFocus(1); else adjust(d === 'left' ? -1 : 1); }
+function navDir(d) { const scr = curScreen(); if (scr && scr.tiles) { if (d === 'left' || d === 'right') moveFocus(d === 'left' ? -1 : 1); return; } if (d === 'up') moveFocus(-1); else if (d === 'down') moveFocus(1); else adjust(d === 'left' ? -1 : 1); }
 
 /* ------------------------------ screens ------------------------------ */
 const opts = (k) => () => OPT[k];
+const TILE_ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 15c3 1 13 1 16 0"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/><path d="M3 13.5l2 1.5M21 13.5l-2 1.5"/></svg>',
+  spots: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>',
+  skater: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 3l-4 3 2 4 2-1v12h8V9l2 1 2-4-4-3c-.5 1.5-2 2.5-4 2.5S8.5 4.5 8 3z"/></svg>',
+  chal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4zM7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4M12 13v4M8 21h8M10 17h4v4h-4z"/></svg>',
+  opts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>'
+};
 function titleScreen() {
   return {
-    id: 'title',
-    footLeft: 'Built by Vertek Studios · plays best with a controller',
-    items: () => [
-      { label: 'Drop in', big: true, sub: (MAPS[curMap] || MAPS.yard).name, run: () => { audio.unlock(); respawn(SPAWN); closeAllToPlay(); } },
-      { label: 'Choose a spot', run: () => openScreen(spotScreen()) },
-      { label: 'Your skater', sub: 'Body, face, hair, clothes, shoes, gear and board', run: () => openCloset() },
-      { label: 'Settings', run: () => openScreen(settingsScreen()) },
-      { label: 'Controls', run: () => openScreen(controlsScreen()) },
-      { label: 'How to flick', run: () => openScreen(howScreen()) },
-      { label: 'Challenges', run: () => openScreen(challengesScreen()) }
-    ],
-    side: () => '<p style="font-size:17px;max-width:40ch">Push, pop and flick your way around ' + (MAPS[curMap] || MAPS.yard).name + '. Every trick comes from how you move the right stick: pull it back, then flick it.</p><div class="press">' + glyph('A', null, 'menu') + ' DROP IN</div>'
+    id: 'title', tiles: true,
+    items: () => {
+      const m = MAPS[curMap] || MAPS.yard, prev = store.get('prev_' + curMap + '_' + S.tod) || store.get('prev_' + curMap + '_day');
+      return [
+        { label: 'Drop in', big: true, icon: 'play', sub: m.name, bg: prev, run: () => { audio.unlock(); closeAllToPlay(); } },
+        { label: 'Spots', icon: 'spots', sub: Object.keys(MAPS).length + ' spots to skate', run: () => openScreen(spotScreen()) },
+        { label: 'Your Skater', icon: 'skater', sub: 'Fits, boards and gear', run: () => { demoStop(); openCloset(); } },
+        { label: 'Challenges', icon: 'chal', sub: done.size + ' / ' + CHALS.length + ' done', run: () => openScreen(challengesScreen()) },
+        { label: 'Options', icon: 'opts', sub: 'Settings and controls', run: () => openScreen(optionsScreen()) }
+      ];
+    }
   };
 }
+function optionsScreen() {
+  return {
+    id: 'options', title: 'Options',
+    items: () => [
+      { label: 'Settings', sub: 'Gameplay, camera, sound and graphics', run: () => openScreen(settingsScreen()) },
+      { label: 'Controls', sub: 'Controller, keyboard and touch', run: () => openScreen(controlsScreen()) },
+      { label: 'How to flick', sub: 'How every trick comes from the right stick', run: () => openScreen(howScreen()) },
+      { label: 'Online name', value: escapeHtml(NET.name), run: () => { netRename(); renderScreen(); titleCard(); } }
+    ]
+  };
+}
+// the player card in the top corner of the main menu
+function titleCard() {
+  const n = NET.name || 'Skater'; $('tName').textContent = n; $('tBadge').textContent = (n.trim()[0] || 'S').toUpperCase();
+  $('tCardSub').textContent = NET.room ? 'Online' : 'Player';
+}
+$('tCard').onclick = () => { netRename(); titleCard(); };
 function spotScreen() {
   return {
     id: 'spots', title: 'Choose a spot', solid: true,
@@ -5650,7 +5715,7 @@ function spotScreen() {
     }
   };
 }
-function closeAllToPlay() { UI.stack = []; setMode2('play'); }
+function closeAllToPlay() { demoStop(); UI.stack = []; setMode2('play'); }
 function pauseScreen() {
   return {
     id: 'pause', title: 'Paused',
@@ -6311,6 +6376,110 @@ Object.assign(audio, {
 });
 
 /* =========================================================================
+   DEMO — on the main menu your own skater skates the spot behind the tiles.
+   A small autopilot pushes, carves and throws tricks; nothing it does counts
+   (no score, challenges, replay or rumble) and its board sounds are muted.
+   ========================================================================= */
+const DEMO = { on: false, run: false, t: 0, trickT: 2.5, stuckT: 0, bailT: 0, goal: null, goalT: 0, orbit: 0, cam: new THREE.Vector3(), look: new THREE.Vector3(), snap: true };
+const DEMO_TRICKS = ['Ollie', 'Kickflip', 'Heelflip', 'Pop Shove-it', 'FS Pop Shove-it', 'Kickflip', 'Laser Flip'];
+// the board sounds stay quiet while the autopilot rides (the Press Start sting uses pop/land too, so only mute mid-step)
+for (const k of ['pop', 'land', 'push', 'bail', 'grind']) { const f = audio[k]; audio[k] = function (...a) { if (DEMO.run) { if (k === 'grind') this.grinding = false; return; } return f.apply(this, a); }; }
+function demoBegin() {
+  DEMO.on = true; DEMO.t = 0; DEMO.trickT = 2 + Math.random() * 2; DEMO.stuckT = 0; DEMO.bailT = 0; DEMO.goal = null; DEMO.snap = true;
+  respawn(SPAWN); P.s = 2.5; P.safe = [];
+}
+function demoStop() { // hand the skater back clean before real play starts
+  if (!DEMO.on) return;
+  DEMO.on = false; P.marker = null; respawn(SPAWN); P.safe = []; rep.frames.length = 0; loseLineQuiet();
+}
+function demoGoal() { // somewhere open near the middle of the spot
+  const c = (MAPS[curMap] || MAPS.yard).cam, b = (MAPS[curMap] || MAPS.yard).bounds;
+  for (let i = 0; i < 12; i++) {
+    const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * Math.min(18, c.r * 0.6);
+    const x = clamp(c.x + Math.sin(a) * r, b[0] + 6, b[2] - 6), z = clamp(c.z + Math.cos(a) * r, b[1] + 6, b[3] - 6);
+    if (Math.hypot(x - P.pos.x, z - P.pos.z) > 8) return { x, z };
+  }
+  return { x: c.x, z: c.z };
+}
+function demoTick(dt) {
+  if (!DEMO.on) demoBegin();
+  DEMO.t += dt;
+  // swap in the autopilot's hands for this step, then give the real ones back to the menu
+  const keep = { lx: inp.lx, ly: inp.ly, fwd: inp.fwd, rx: inp.rx, ry: inp.ry }, cur = pad.cur, dn = pad.down, up = pad.up;
+  pad.cur = {}; pad.down = new Set(); pad.up = new Set();
+  inp.lx = 0; inp.ly = 0; inp.fwd = 0; inp.rx = 0; inp.ry = 0;
+  DEMO.run = true;
+  try {
+    if (P.state === 'ground' || P.state === 'air') {
+      DEMO.goalT -= dt;
+      if (!DEMO.goal || DEMO.goalT <= 0 || Math.hypot(DEMO.goal.x - P.pos.x, DEMO.goal.z - P.pos.z) < 3) { DEMO.goal = demoGoal(); DEMO.goalT = 7; }
+      const yaw = travelYaw(), want = Math.atan2(DEMO.goal.x - P.pos.x, DEMO.goal.z - P.pos.z);
+      // feel ahead for walls: steer off anything tall, pop over anything small
+      const [fx, fz] = fwdOf(yaw);
+      let err = wrap(want - yaw), ahead = null, near = false;
+      for (const d of [1.2, 2.4, 3.6, 5]) { // a fan of feelers: straight ahead and a shoulder-width either side
+        for (const w of [0, -0.55, 0.55]) {
+          const h = probe([[P.pos.x + fx * d - fz * w, P.pos.z + fz * d + fx * w]], P.pos.y);
+          if (h && (!ahead || h.height > ahead.height)) { ahead = h; near = d < 3; }
+        }
+        if (ahead && ahead.height > 0.45) break;
+      }
+      if (ahead && ahead.height > 0.45) {
+        err = (ahead.nx * fz - ahead.nz * fx) >= 0 ? -1.4 : 1.4;
+        if (near) DEMO.goal = { x: P.pos.x - fx * 12, z: P.pos.z - fz * 12 }, DEMO.goalT = 4; // boxed in: head back the way we came
+      }
+      inp.lx = P.state === 'ground' ? clamp(-err * 1.4, -0.85, 0.85) : 0; // no stick in the air, or the board spins out
+      if (P.state === 'ground' && P.s < 4.6 && !P.onTrans && !(ahead && ahead.height > 0.45 && near)) pad.cur.X = true;
+      if (P.state === 'ground') {
+        DEMO.trickT -= dt;
+        const small = ahead && ahead.height <= 0.45 && ahead.height > 0.1;
+        if ((DEMO.trickT <= 0 || small) && P.s > 3 && !P.onTrans && !P.manual && Math.abs(err) < 0.5 && Math.abs(P.turnRate) < 0.35) {
+          DEMO.trickT = 2.2 + Math.random() * 2.5;
+          doPop({ name: small ? 'Ollie' : DEMO_TRICKS[Math.floor(Math.random() * DEMO_TRICKS.length)], nollie: false, strength: 0.75 + Math.random() * 0.25 });
+        }
+      }
+    }
+    acc += dt;
+    while (acc >= DT) {
+      acc -= DT;
+      if (P.state === 'ground') stepGround(DT);
+      else if (P.state === 'air') stepAir(DT);
+      else if (P.state === 'grind') stepGrind(DT);
+      else if (P.state === 'plant') stepPlant(DT);
+      else if (P.state === 'walk') stepWalk(DT);
+      else if (P.state === 'trans') stepTrans(DT);
+      else if (P.state === 'bail') stepBail(DT);
+      stepBoard(DT);
+    }
+  } finally {
+    DEMO.run = false; Object.assign(inp, keep); pad.cur = cur; pad.down = dn; pad.up = up;
+  }
+  // stuck on something, slowed to a stop, fell or wandered off: start the run again
+  DEMO.stuckT = P.state === 'ground' && P.s < 1 ? DEMO.stuckT + dt : 0;
+  DEMO.bailT = P.state === 'bail' || P.state === 'walk' || P.state === 'trans' ? DEMO.bailT + dt : 0;
+  const b = (MAPS[curMap] || MAPS.yard).bounds, out = P.pos.x < b[0] || P.pos.x > b[2] || P.pos.z < b[1] || P.pos.z > b[3];
+  if (DEMO.stuckT > 1.6 || DEMO.bailT > 2.4 || out || P.pos.y < -20) demoBegin();
+}
+// a slow cinematic orbit around the skater, framed above the tiles
+function demoCamera(dt) {
+  DEMO.orbit += dt * 0.12;
+  const portrait = innerHeight > innerWidth, r = portrait ? 7.5 : 5.6, base = P.pos;
+  const yaw = travelYaw() + 2.2 + Math.sin(DEMO.orbit) * 1.1;
+  const want = new THREE.Vector3(base.x + Math.sin(yaw) * r, base.y + 1.6 + Math.sin(DEMO.orbit * 0.7) * 0.4, base.z + Math.cos(yaw) * r);
+  want.y = Math.max(want.y, groundTop(want.x, want.z) + 0.6);
+  const look = new THREE.Vector3(base.x, base.y + (portrait ? -0.8 : 0.35), base.z);
+  if (innerWidth > 900) { // keep him right of the What's new panel
+    const dx = base.x - want.x, dz = base.z - want.z, d = Math.hypot(dx, dz) || 1;
+    look.x -= (-dz / d) * 0.9; look.z -= (dx / d) * 0.9;
+  }
+  if (DEMO.snap) { DEMO.cam.copy(want); DEMO.look.copy(look); DEMO.snap = false; }
+  DEMO.cam.lerp(want, Math.min(1, dt * 2.2)); DEMO.look.lerp(look, Math.min(1, dt * 10));
+  camera.position.copy(DEMO.cam); camera.lookAt(DEMO.look);
+  const f = portrait ? 62 : 50; if (camera.fov !== f) { camera.fov = f; camera.updateProjectionMatrix(); }
+  camState.fov = f;
+}
+
+/* =========================================================================
    GAME LOOP
    ========================================================================= */
 let clock = 0, acc = 0, last = performance.now();
@@ -6339,7 +6508,7 @@ function tick(dt) {
     if (BOOT.active) bootTick(dt); else menuInput(dt);
     clock += dt;
     if (CL.on) closetTick(dt);
-    if (mode === 'title') { animate(dt, clock); stepCamera(dt, true); updateTOD(dt); }
+    if (mode === 'title') { if (!CL.on) demoTick(dt); animate(dt, clock); if (CL.on) stepCamera(dt, true); else demoCamera(dt); updateTOD(dt); }
     audio.update(true);
   } else if (mode === 'replay') { stepReplay(dt); audio.update(true); }
   else if (mode === 'map') {
@@ -6431,7 +6600,7 @@ window.__steeze = {
   replayBegin() { if (rep.frames.length < 2) return null; rep.live = snapTransforms(); rep.t0 = rep.frames[0].t; rep.t1 = rep.frames[rep.frames.length - 1].t; return [rep.t0, rep.t1]; },
   replaySeek(t) { const fr = frameAt(t); applyTransforms(fr.f); if (sun) { sun.position.copy(skater.position).addScaledVector(todSun, 30); sun.target.position.copy(skater.position); } return fr.p; },
   replayEnd() { if (rep.live) applyTransforms(rep.live); if (BOARD.attached) { leanG.add(boardRig); boardRig.position.set(0, 0, 0); boardRig.quaternion.identity(); } else placeBoardMesh(); },
-  BOARD, poles, applyTOD, loadMap, setLook, LOOK, LOOK_OPTS, B, openCloset, closeCloset, CL, BOARD_PARTS, EXT, THREE_V: THREE.Vector3, MAPS, STYLES, get curMap() { return curMap; }, SPOTS, LAMPS, camera, world, bail, getOff, getOn, callBoard, dropBoard, pickUpBoard, nearBoard, probe, R, skater, boardRig, CT, carryRest, NET, CLIP, store, TOUCHB, audio, BOOT
+  BOARD, poles, applyTOD, loadMap, setLook, LOOK, LOOK_OPTS, B, openCloset, closeCloset, CL, BOARD_PARTS, EXT, THREE_V: THREE.Vector3, MAPS, STYLES, get curMap() { return curMap; }, SPOTS, LAMPS, camera, world, bail, getOff, getOn, callBoard, dropBoard, pickUpBoard, nearBoard, probe, R, skater, boardRig, CT, carryRest, NET, CLIP, store, TOUCHB, audio, BOOT, DEMO
 };
 onlineStart(); // multiplayer + account save, when the platform offers them
 </script>
