@@ -191,7 +191,21 @@ button:focus-visible { outline: 2px solid var(--curb); outline-offset: 2px; }
 .press { font-family: var(--mono); font-size: 13px; color: var(--dust); letter-spacing: .08em; display: flex; align-items: center; gap: 8px; animation: blink 1.6s ease-in-out infinite; }
 @keyframes blink { 50% { opacity: .45; } }
 #loading { position: fixed; inset: 0; display: grid; place-items: center; font-family: var(--mono); color: var(--dust); font-size: 13px; letter-spacing: .1em; }
+/* ---- game modes bar ---- */
+#modebar { position: absolute; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); display: grid; justify-items: center; gap: 2px; padding: 8px 22px 10px; border-radius: 14px; background: rgba(14,15,17,.72); border: 1px solid rgba(239,235,225,.14); text-align: center; min-width: 200px; max-width: 92vw; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+#modebar small { font: 700 10px var(--mono); letter-spacing: .2em; color: var(--curb); }
+#modebar b { font: 400 30px/1.05 var(--display); color: var(--chalk); font-variant-numeric: tabular-nums; }
+#modebar.hot b { color: var(--bail); }
+#modebar span { font: 600 12px var(--ui); color: var(--dust); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 88vw; }
+#modebar.duel b { display: flex; gap: 18px; font-size: 18px; }
+.ltr { display: inline-flex; align-items: center; gap: 3px; }
+.ltr em { font: 700 11px var(--ui); font-style: normal; color: var(--dust); margin-right: 6px; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ltr i { font: 400 18px var(--display); font-style: normal; width: 18px; text-align: center; color: rgba(239,235,225,.22); }
+.ltr i.on { color: var(--bail); }
+@media (max-width: 760px) { #modebar { top: calc(58px + env(safe-area-inset-top, 0px)); padding: 6px 14px 8px; } #modebar b { font-size: 24px; } #modebar.duel b { flex-direction: column; gap: 2px; } }
 /* ---- main menu: console home screen ---- */
+#view { transition: filter .5s ease, transform .5s ease; }
+body.menublur #view { filter: blur(9px) brightness(.7) saturate(1.15); transform: scale(1.06); }
 #title { background: linear-gradient(0deg, rgba(9,10,12,.92) 0%, rgba(9,10,12,.55) 30%, rgba(9,10,12,0) 55%, rgba(9,10,12,0) 78%, rgba(9,10,12,.55) 100%); grid-template-rows: auto 1fr auto; }
 #title .t-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: calc(26px + env(safe-area-inset-top, 0px)) max(36px, env(safe-area-inset-right, 0px)) 0 max(36px, env(safe-area-inset-left, 0px)); }
 #title .word { font-size: clamp(44px, 7vw, 84px); }
@@ -205,21 +219,21 @@ button:focus-visible { outline: 2px solid var(--curb); outline-offset: 2px; }
 .t-news em { font-style: normal; font-weight: 700; color: var(--chalk); }
 #title .scr-body { display: block; align-self: end; padding: 0 max(36px, env(safe-area-inset-right, 0px)) 0 max(36px, env(safe-area-inset-left, 0px)); }
 #title .side { display: none; }
-#title .list.tiles { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 12px; overflow: visible; padding: 12px 0 6px; }
+#title .list.tiles { display: grid; grid-template-columns: 1.6fr repeat(5, 1fr); gap: 12px; overflow: visible; padding: 12px 0 6px; }
 .tile { position: relative; height: clamp(120px, 21vh, 176px); border-radius: 14px; border: 1px solid rgba(239,235,225,.12); background: rgba(16,17,19,.72) center / cover no-repeat; color: var(--chalk); text-align: left; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; overflow: hidden; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background-color .16s ease; }
 .tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(9,10,12,.88) 0%, rgba(9,10,12,.15) 70%); z-index: 0; }
 .tile > * { position: relative; z-index: 1; }
 .tile svg { position: absolute; top: 14px; left: 16px; width: 28px; height: 28px; color: var(--dust); transition: color .16s; }
-.tile .tl { font: 400 clamp(17px, 2vw, 24px)/1 var(--display); letter-spacing: .01em; transform: skewX(-8deg); transform-origin: left; }
+.tile .tl { white-space: nowrap; font: 400 clamp(15px, 1.55vw, 22px)/1 var(--display); letter-spacing: .01em; transform: skewX(-8deg); transform-origin: left; }
 .tile .ts { font: 600 12px var(--ui); color: var(--dust); }
-.tile.big .tl { font-size: clamp(24px, 3vw, 36px); }
+.tile.big .tl { font-size: clamp(22px, 2.6vw, 34px); }
 .tile.focus { transform: translateY(-6px) scale(1.035); border-color: var(--curb); box-shadow: 0 0 0 2px var(--curb), 0 14px 34px rgba(0,0,0,.5), 0 0 40px rgba(245,197,24,.22); }
 .tile.focus svg { color: var(--curb); }
 .tile.focus .ts { color: var(--chalk); }
 .tile .play { position: absolute; right: 14px; bottom: 14px; width: 38px; height: 38px; border-radius: 50%; background: var(--curb); color: #111; display: grid; place-items: center; font-size: 15px; z-index: 1; }
 #title .scr-foot { padding-top: 10px; }
-@media (max-width: 900px) { .t-news { display: none; } #title .list.tiles { grid-template-columns: repeat(5, minmax(128px, 1fr)); overflow-x: auto; scroll-snap-type: x mandatory; padding: 12px 4px 10px; margin: 0 -4px; } .tile { scroll-snap-align: start; } }
-@media (max-width: 560px) { #title .t-top { padding-left: 16px; padding-right: 16px; } .t-card span { display: none; } .t-card { padding: 4px; } #title .scr-body { padding: 0 12px; } #title .list.tiles { grid-template-columns: repeat(2, 1fr); overflow: visible; } .tile.big { grid-column: 1 / -1; } .tile { height: 104px; } }
+@media (max-width: 900px) { .t-news { display: none; } #title .list.tiles { grid-template-columns: repeat(6, minmax(128px, 1fr)); overflow-x: auto; scroll-snap-type: x mandatory; padding: 12px 4px 10px; margin: 0 -4px; } .tile { scroll-snap-align: start; } }
+@media (max-width: 560px) { #title .t-top { padding-left: 16px; padding-right: 16px; } .t-card span { display: none; } .t-card { padding: 4px; } #title .scr-body { padding: 0 12px; } #title .list.tiles { grid-template-columns: repeat(2, 1fr); overflow: visible; } .tile.big, .tile:last-child { grid-column: 1 / -1; } .tile { height: 104px; } }
 @media (max-width: 760px) {
   .scr-body, #title .scr-body { grid-template-columns: minmax(0, 1fr); }
   .side { display: none; }
@@ -232,6 +246,14 @@ button:focus-visible { outline: 2px solid var(--curb); outline-offset: 2px; }
 #touchui .tb { pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; background: rgba(14,15,17,.55); color: var(--chalk); border: 1.5px solid rgba(239,235,225,.35); border-radius: 999px; font: 700 12px var(--ui); letter-spacing: .08em; min-width: 54px; height: 44px; padding: 0 14px; }
 #touchui .tb.on { background: var(--curb); color: #111; border-color: var(--curb); }
 #tbMenu { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); font-size: 20px !important; min-width: 48px !important; padding: 0 !important; }
+#tbMusic { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(max(12px, env(safe-area-inset-right, 0px)) + 58px); font-size: 20px !important; min-width: 48px !important; padding: 0 !important; }
+#np { position: fixed; left: max(20px, env(safe-area-inset-left, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 45; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 10px; max-width: min(380px, 80vw); border-radius: 12px; background: rgba(14,15,17,.78); border-left: 4px solid var(--curb); color: var(--chalk); pointer-events: none; opacity: 0; transform: translateX(-24px); transition: opacity .35s ease, transform .35s ease; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+#np.on { opacity: 1; transform: none; }
+#np i { font-style: normal; font-size: 18px; width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--curb); color: #111; flex: none; }
+#np span { display: grid; min-width: 0; line-height: 1.2; }
+#np b { font: 700 15px var(--ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#np small { font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dust); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.booting #np { visibility: hidden; }
 #tbCol { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 38%; display: grid; gap: 10px; }
 body.touch #tr { right: 76px; }
 .netname { position: fixed; left: 0; top: 0; z-index: 4; pointer-events: none; font: 700 12px var(--ui); color: var(--chalk); background: rgba(14,15,17,.6); padding: 2px 8px; border-radius: 999px; white-space: nowrap; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
@@ -309,6 +331,7 @@ body.touch #tr { right: 76px; }
     <canvas id="stick" width="160" height="160"></canvas>
     <div class="lbl" id="inmode">Flick-it</div>
   </div>
+  <div id="modebar" hidden><small id="mbTitle"></small><b id="mbBig"></b><span id="mbSub"></span></div>
   <div id="callout"></div>
   <div id="balance" hidden><div class="track"></div><div class="needle" id="needle"></div><div class="cap" id="balcap">Balance</div></div>
   <div id="hold" hidden><span id="holdg"></span><span id="holdt">Hold</span><i><b id="holdb"></b></i></div>
@@ -320,8 +343,11 @@ body.touch #tr { right: 76px; }
   <div id="toast"></div>
 </div>
 
+<div id="np" hidden aria-live="polite"><i>&#9834;</i><span><b id="npTitle"></b><small id="npArtist"></small></span></div>
+<input type="file" id="musicFile" accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav,.flac,.opus" multiple hidden>
 <div id="touchui" hidden>
   <button class="tb" id="tbMenu" data-b="Menu" aria-label="Pause menu">&#9776;</button>
+  <button class="tb" id="tbMusic" data-b="Music" aria-label="Music">&#9834;</button>
   <div id="tbCol">
     <button class="tb" data-b="Y" aria-label="Get on or off the board">BOARD</button>
     <button class="tb" data-b="View" aria-label="Map (hold for replay)">MAP</button>
@@ -348,7 +374,7 @@ body.touch #tr { right: 76px; }
   </div>
   <aside class="t-news" aria-label="What's new">
     <b>WHAT'S NEW</b>
-    <ul><li><em>Multiplayer is live.</em> Skate with everyone at the same spot.</li><li><em>Phone controls.</em> Touch buttons and tappable menus.</li><li><em>Board animations.</em> Kick it up, carry it, drop in.</li></ul>
+    <ul><li><em>Game modes.</em> Own the Spot and S.T.E.E.Z.E, solo or online.</li><li><em>Your music.</em> Add songs from your device. Options → Music.</li><li><em>Multiplayer is live.</em> Skate with everyone at the same spot.</li></ul>
   </aside>
   <div class="scr-body">
     <div class="list tiles" id="titleList"></div>
@@ -2760,6 +2786,7 @@ function clipDrive(dt, st) {
    Right stick convention: x right +, y DOWN + (pulled back toward you).
    ========================================================================= */
 const BTN = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'View', 'Menu', 'LS', 'RS', 'Up', 'Down', 'Left', 'Right'];
+const BTN_ALL = [...BTN, 'Music']; // Music only comes from the phone's ♪ button
 const pad = { cur: {}, prev: {}, held: {}, down: new Set(), up: new Set() };
 const TOUCHB = new Set(), TFRESH = new Set(), TLATE = new Set(); // buttons held on the on-screen (phone) controls; a quick tap is held until the game has read it once
 for (const b of BTN) { pad.cur[b] = false; pad.prev[b] = false; pad.held[b] = 0; }
@@ -2877,7 +2904,7 @@ function pollInput(dt) {
   }
   // edges + hold timers
   pad.down.clear(); pad.up.clear();
-  for (const n of BTN) {
+  for (const n of BTN_ALL) {
     pad.prev[n] = pad.cur[n]; pad.cur[n] = !!cur[n];
     if (pad.cur[n] && !pad.prev[n]) { pad.down.add(n); pad.held[n] = 0; }
     if (!pad.cur[n] && pad.prev[n]) pad.up.add(n);
@@ -2900,7 +2927,6 @@ function tapHold(name, holdTime) {
 /* ------------------------------ haptics ------------------------------ */
 let rumbleUntil = 0;
 function rumble(strong, weak, ms, force) {
-  if (typeof DEMO === 'object' && DEMO.run) return;
   if (!S.vibration || !activePad || !activePad.vibrationActuator) return;
   const now = performance.now();
   if (!force && now < rumbleUntil - 30) return;
@@ -4734,27 +4760,28 @@ function buildCourse() {
 const line = { tricks: [], score: 0, count: {}, idle: 0, active: false };
 let total = 0, best = store.get('best', 0);
 function addTrick(name, value) {
-  if (DEMO.run) return; // the menu autopilot never scores
   const n = name.replace(/ \(sketchy\)| \(scraped\)/, '');
   const rep = line.count[n] || 0; line.count[n] = rep + 1;
   const v = Math.round(value * Math.pow(0.6, rep) / 5) * 5;
   line.tricks.push({ name, v }); line.score += v; line.idle = 0; line.active = true;
   if (S.trickNames) feedPush(name, v);
+  modeTrick(name, v);
   const mult = $('mult'); mult.classList.remove('bump'); void mult.offsetWidth; mult.classList.add('bump');
 }
 const lineMult = () => Math.min(12, Math.max(1, line.tricks.length));
 function bankLine() {
-  if (!line.active || DEMO.run) return;
+  if (!line.active) return;
   const pts = Math.round(line.score * lineMult());
   total += pts;
   if (pts > best) { best = pts; store.set('best', best); }
   if (pts >= 5000) chal('line');
+  modeBank(pts);
   callout(pts >= 1000 ? 'Line banked' : 'Banked', '+' + pts.toLocaleString());
   line.tricks = []; line.score = 0; line.count = {}; line.active = false;
   $('feed').innerHTML = '';
 }
 function loseLine(reason) {
-  if (DEMO.run) return;
+  modeBail();
   callout('Bail', reason, true);
   line.tricks = []; line.score = 0; line.count = {}; line.active = false;
   $('feed').innerHTML = '';
@@ -4782,7 +4809,6 @@ const CHALS = [
 ];
 const done = new Set(store.get('chals', []));
 function chal(id) {
-  if (DEMO.run) return;
   const c = CHALS.find(c => c[0] === id);
   if (!c || done.has(id)) return;
   done.add(id); store.set('chals', [...done]);
@@ -5442,7 +5468,7 @@ function feedPush(name, v) {
   f.appendChild(d);
   while (f.children.length > 5) f.removeChild(f.firstChild);
 }
-function toast(html) { if (typeof DEMO === 'object' && DEMO.run) return; const t = $('toast'); t.innerHTML = html; t.classList.add('on'); toastT = 3; }
+function toast(html) { const t = $('toast'); t.innerHTML = html; t.classList.add('on'); toastT = 3; }
 function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 let hintKey = '', fpsN = 0, fpsT = 0; let hintAge = 0;
 function updateHud(dt) {
@@ -5663,6 +5689,7 @@ const TILE_ICON = {
   spots: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>',
   skater: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8 3l-4 3 2 4 2-1v12h8V9l2 1 2-4-4-3c-.5 1.5-2 2.5-4 2.5S8.5 4.5 8 3z"/></svg>',
   chal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0V4zM7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4M12 13v4M8 21h8M10 17h4v4h-4z"/></svg>',
+  modes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4M12 2v3"/></svg>',
   opts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>'
 };
 function titleScreen() {
@@ -5672,8 +5699,9 @@ function titleScreen() {
       const m = MAPS[curMap] || MAPS.yard, prev = store.get('prev_' + curMap + '_' + S.tod) || store.get('prev_' + curMap + '_day');
       return [
         { label: 'Drop in', big: true, icon: 'play', sub: m.name, bg: prev, run: () => { audio.unlock(); closeAllToPlay(); } },
+        { label: 'Game Modes', icon: 'modes', sub: 'Own the Spot · S.T.E.E.Z.E', run: () => openScreen(modesScreen()) },
         { label: 'Spots', icon: 'spots', sub: Object.keys(MAPS).length + ' spots to skate', run: () => openScreen(spotScreen()) },
-        { label: 'Your Skater', icon: 'skater', sub: 'Fits, boards and gear', run: () => { demoStop(); openCloset(); } },
+        { label: 'Your Skater', icon: 'skater', sub: 'Fits, boards and gear', run: () => openCloset() },
         { label: 'Challenges', icon: 'chal', sub: done.size + ' / ' + CHALS.length + ' done', run: () => openScreen(challengesScreen()) },
         { label: 'Options', icon: 'opts', sub: 'Settings and controls', run: () => openScreen(optionsScreen()) }
       ];
@@ -5687,6 +5715,7 @@ function optionsScreen() {
       { label: 'Settings', sub: 'Gameplay, camera, sound and graphics', run: () => openScreen(settingsScreen()) },
       { label: 'Controls', sub: 'Controller, keyboard and touch', run: () => openScreen(controlsScreen()) },
       { label: 'How to flick', sub: 'How every trick comes from the right stick', run: () => openScreen(howScreen()) },
+      { label: 'Music', sub: 'Add your own songs from this device', value: MYM.songs.length ? MYM.songs.length + (MYM.songs.length === 1 ? ' song' : ' songs') : '', run: () => openScreen(musicScreen()) },
       { label: 'Online name', value: escapeHtml(NET.name), run: () => { netRename(); renderScreen(); titleCard(); } }
     ]
   };
@@ -5715,7 +5744,7 @@ function spotScreen() {
     }
   };
 }
-function closeAllToPlay() { demoStop(); UI.stack = []; setMode2('play'); }
+function closeAllToPlay() { UI.stack = []; setMode2('play'); }
 function pauseScreen() {
   return {
     id: 'pause', title: 'Paused',
@@ -5724,7 +5753,9 @@ function pauseScreen() {
       { label: 'Replay the last 12 seconds', run: () => { UI.stack = []; openReplay(); } },
       { label: 'Map', sub: 'Pick a spot on the map to go straight there', run: () => { UI.stack = []; setMode2('map'); } },
       { label: 'Change spot', value: (MAPS[curMap] || MAPS.yard).name, run: () => openScreen(spotScreen()) },
+      { label: 'Game modes', sub: MODE.jam ? 'Own the Spot is on' : MODE.duel ? 'S.T.E.E.Z.E is on' : 'Own the Spot · S.T.E.E.Z.E', run: () => openScreen(modesScreen()) },
       { label: 'Your skater', run: () => { UI.stack = []; openCloset(); } },
+      { label: 'Music', sub: 'Skip, pause or add your own songs', value: MYM.songs.length ? MYM.songs.length + (MYM.songs.length === 1 ? ' song' : ' songs') : '', run: () => openScreen(musicScreen()) },
       { label: P.marker ? 'Go to session marker' : 'Set session marker here', sub: P.marker ? 'Hold ' + glyph('Up') + ' in game to move it' : 'Only works while rolling on the ground', run: () => { if (P.marker) { respawn(P.marker); closeAllToPlay(); } else if (P.state === 'ground') { setMarker(); closeAllToPlay(); } else toast('Get on the ground to drop a marker'); } },
       { label: 'Restart at the start', run: () => { P.marker = null; respawn(SPAWN); loseLineQuiet(); closeAllToPlay(); } },
       { type: 'section', label: 'Game' },
@@ -5801,7 +5832,7 @@ function settingsScreen() {
     { label: 'Audio & Video', items: () => [
       { type: 'slider', key: 'master', label: 'Master volume', min: 0, max: 100, step: 5 },
       { type: 'slider', key: 'sfx', label: 'Effects volume', min: 0, max: 100, step: 5 },
-      { type: 'slider', key: 'music', label: 'Music volume', min: 0, max: 100, step: 5, desc: 'The beat on the title screen and its menus.' },
+      { type: 'slider', key: 'music', label: 'Music volume', min: 0, max: 100, step: 5, desc: 'The menu music and your own songs.' },
       { type: 'section', label: 'Video' },
       { type: 'choice', key: 'tod', label: 'Time of day', options: opts('tod'), desc: 'Day, golden hour, sunset, or night with the street lights on and the windows lit.' },
       { type: 'choice', key: 'quality', label: 'Graphics', options: opts('quality'), desc: 'Low-end PC turns off real-time shadows and antialiasing and uses a soft blob shadow. Use it on integrated graphics.' },
@@ -6075,7 +6106,7 @@ async function supaRoom() {
     for (const id in st) {
       if (id === me) continue; seen.add(id);
       const m = (st[id] && st[id][0]) || {}; let p = peers.get(id); const fresh = !p; if (!p) { p = mk(id); peers.set(id, p); }
-      p.presence = Object.assign({}, p.presence, { v: m.v, m: m.m, h: m.h, l: m.l, n: m.n });
+      p.presence = Object.assign({}, p.presence, { v: m.v, m: m.m, h: m.h, l: m.l, n: m.n, g: m.g });
       (fresh ? joined : updated).push(p);
     }
     for (const [id, p] of peers) if (!seen.has(id)) { peers.delete(id); left.push(p); }
@@ -6084,16 +6115,16 @@ async function supaRoom() {
   ch.on('broadcast', { event: 'pose' }, (msg) => {
     const d = msg && msg.payload; if (!d || typeof d.id !== 'string' || d.id === me || typeof d.s !== 'string') return;
     const p = peers.get(d.id); if (!p) return;
-    p.presence = Object.assign({}, p.presence, { s: d.s, m: d.m, h: d.h }); tell([], [], [p]);
+    p.presence = Object.assign({}, p.presence, { s: d.s, m: d.m, h: d.h }, typeof d.g === 'string' ? { g: d.g } : {}); tell([], [], [p]);
   });
   await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('timeout')), 15000); ch.subscribe((s) => { if (s === 'SUBSCRIBED') { clearTimeout(t); res(); } else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') { clearTimeout(t); rej(new Error(s)); } }); });
   return {
     kind: 'supa',
     async presence(patch) {
       for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; }
-      const slow = { v: mine.v, m: mine.m, h: mine.h, l: mine.l, n: mine.n }, js = JSON.stringify(slow);
+      const slow = { v: mine.v, m: mine.m, h: mine.h, l: mine.l, n: mine.n, g: mine.g }, js = JSON.stringify(slow);
       if (js !== tracked) { tracked = js; ch.track(slow); }
-      if (typeof patch.s === 'string') ch.send({ type: 'broadcast', event: 'pose', payload: { id: me, s: patch.s, m: mine.m, h: mine.h } });
+      if (typeof patch.s === 'string') ch.send({ type: 'broadcast', event: 'pose', payload: { id: me, s: patch.s, m: mine.m, h: mine.h, g: mine.g } }); // game-mode state rides along so scores and turns show up fast
     },
     onPeers(h) { handlers.push(h); return () => { }; }
   };
@@ -6166,6 +6197,7 @@ function netUpdate(p) {
   }
   a.map = typeof pr.m === 'string' ? pr.m : ''; a.hidden = !!pr.h;
   if (!a.by && typeof pr.n === 'string') { const n = netCleanName(pr.n) || 'Skater'; if (n !== a.name) { a.name = n; if (a.av) a.av.label.textContent = n; } }
+  if (typeof pr.g === 'string' && pr.g.length < 4000 && pr.g !== a.gStr) { a.gStr = pr.g; try { const g = JSON.parse(pr.g); a.g = g && typeof g.id === 'string' ? g : null; } catch (e) { a.g = null; } }
   if (typeof pr.s === 'string' && pr.s.length < 4000) { const st = netDecode(pr.s); if (st) { a.st = st; a.t = performance.now(); } }
 }
 async function netName(a) {
@@ -6220,7 +6252,7 @@ function netTick(dt) {
     const hidden = CL.on || mode === 'title' || mode === 'replay';
     const still = (P.state === 'walk' && P.walk.speed < 0.05) || (P.state === 'ground' && P.s < 0.05 && P.pushT < 0);
     NET.sendT = NET.room.kind === 'supa' ? (hidden ? 2 : still ? 0.7 : 0.15) : 0.1;   // the website relay is metered: ~6 a second while moving
-    const patch = { v: 1, m: curMap, h: hidden ? 1 : 0, n: NET.name, s: hidden ? null : netEncode() };
+    const patch = { v: 1, m: curMap, h: hidden ? 1 : 0, n: NET.name, g: MODE.pub, s: hidden ? null : netEncode() };
     if (NET.lookDirty) { patch.l = JSON.stringify(LOOK); NET.lookDirty = false; }
     NET.room.presence(patch).catch(() => { });
   }
@@ -6359,7 +6391,8 @@ Object.assign(audio, {
   musicTick() { // the beat plays on the title and its menus, and fades out once you drop in
     const M = this.music; if (!M || !this.ctx) return;
     const onTitle = mode === 'title' || (mode === 'menu' && UI.stack[0] && UI.stack[0].id === 'title');
-    M.out.gain.setTargetAtTime(onTitle && !document.hidden ? (S.music / 100) * 0.55 : 0, this.ctx.currentTime, onTitle ? 0.5 : 0.35);
+    const other = MYM.state && (MYM.state.mine || MYM.state.menuOn);
+    M.out.gain.setTargetAtTime(onTitle && !other && !document.hidden ? (S.music / 100) * 0.55 : 0, this.ctx.currentTime, onTitle ? 0.5 : 0.35);
   },
   sting() { // Press Start: a whoosh up into a board clack and a chord that blooms
     if (!this.ctx) return; const ctx = this.ctx, t = ctx.currentTime;
@@ -6376,108 +6409,382 @@ Object.assign(audio, {
 });
 
 /* =========================================================================
-   DEMO — on the main menu your own skater skates the spot behind the tiles.
-   A small autopilot pushes, carves and throws tricks; nothing it does counts
-   (no score, challenges, replay or rumble) and its board sounds are muted.
+   MY MUSIC — players add songs from their own phone or computer. The files
+   are kept in this browser only (IndexedDB) and never uploaded anywhere.
+   Once you have songs they play everywhere, menus and skating. A small
+   pop-up names each song as it starts, and the quick music panel (hold
+   Menu on a controller, M on a keyboard, the ♪ button on a phone) skips,
+   goes back, pauses and adds songs without leaving the session.
+   Without songs, the menus play the menu track (or the built-in beat).
    ========================================================================= */
-const DEMO = { on: false, run: false, t: 0, trickT: 2.5, stuckT: 0, bailT: 0, goal: null, goalT: 0, orbit: 0, cam: new THREE.Vector3(), look: new THREE.Vector3(), snap: true };
-const DEMO_TRICKS = ['Ollie', 'Kickflip', 'Heelflip', 'Pop Shove-it', 'FS Pop Shove-it', 'Kickflip', 'Laser Flip'];
-// the board sounds stay quiet while the autopilot rides (the Press Start sting uses pop/land too, so only mute mid-step)
-for (const k of ['pop', 'land', 'push', 'bail', 'grind']) { const f = audio[k]; audio[k] = function (...a) { if (DEMO.run) { if (k === 'grind') this.grinding = false; return; } return f.apply(this, a); }; }
-function demoBegin() {
-  DEMO.on = true; DEMO.t = 0; DEMO.trickT = 2 + Math.random() * 2; DEMO.stuckT = 0; DEMO.bailT = 0; DEMO.goal = null; DEMO.snap = true;
-  respawn(SPAWN); P.s = 2.5; P.safe = [];
+const MYM = { songs: [], idx: 0, el: null, paused: store.get('myPaused', false), vol: 0, url: null, menu: null, menuOk: false, clearArm: 0, npT: 0 };
+const MENU_TRACK = 'menu_music.mp3';
+function songName(file) {
+  let n = file.replace(/\.[a-z0-9]{2,4}$/i, '').replace(/_/g, ' ');
+  n = n.replace(/\s*[\(\[][^\)\]]*(official|audio|video|lyric|visuali[sz]er|\bhd\b|\bhq\b|\bmv\b)[^\)\]]*[\)\]]/ig, '');
+  n = n.replace(/\s+-\s+(not the video|official.*|audio|lyrics?)\s*$/i, '').replace(/\s{2,}/g, ' ').trim();
+  const i = n.indexOf(' - ');
+  return i > 0 ? { artist: n.slice(0, i).trim(), title: n.slice(i + 3).trim() } : { artist: '', title: n };
 }
-function demoStop() { // hand the skater back clean before real play starts
-  if (!DEMO.on) return;
-  DEMO.on = false; P.marker = null; respawn(SPAWN); P.safe = []; rep.frames.length = 0; loseLineQuiet();
+function myDb() {
+  return new Promise((res, rej) => {
+    try { const r = indexedDB.open('steeze-music', 1); r.onupgradeneeded = () => r.result.createObjectStore('songs', { keyPath: 'id' }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); }
+  });
 }
-function demoGoal() { // somewhere open near the middle of the spot
-  const c = (MAPS[curMap] || MAPS.yard).cam, b = (MAPS[curMap] || MAPS.yard).bounds;
-  for (let i = 0; i < 12; i++) {
-    const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * Math.min(18, c.r * 0.6);
-    const x = clamp(c.x + Math.sin(a) * r, b[0] + 6, b[2] - 6), z = clamp(c.z + Math.cos(a) * r, b[1] + 6, b[3] - 6);
-    if (Math.hypot(x - P.pos.x, z - P.pos.z) > 8) return { x, z };
-  }
-  return { x: c.x, z: c.z };
-}
-function demoTick(dt) {
-  if (!DEMO.on) demoBegin();
-  DEMO.t += dt;
-  // swap in the autopilot's hands for this step, then give the real ones back to the menu
-  const keep = { lx: inp.lx, ly: inp.ly, fwd: inp.fwd, rx: inp.rx, ry: inp.ry }, cur = pad.cur, dn = pad.down, up = pad.up;
-  pad.cur = {}; pad.down = new Set(); pad.up = new Set();
-  inp.lx = 0; inp.ly = 0; inp.fwd = 0; inp.rx = 0; inp.ry = 0;
-  DEMO.run = true;
+async function myLoad() {
   try {
-    if (P.state === 'ground' || P.state === 'air') {
-      DEMO.goalT -= dt;
-      if (!DEMO.goal || DEMO.goalT <= 0 || Math.hypot(DEMO.goal.x - P.pos.x, DEMO.goal.z - P.pos.z) < 3) { DEMO.goal = demoGoal(); DEMO.goalT = 7; }
-      const yaw = travelYaw(), want = Math.atan2(DEMO.goal.x - P.pos.x, DEMO.goal.z - P.pos.z);
-      // feel ahead for walls: steer off anything tall, pop over anything small
-      const [fx, fz] = fwdOf(yaw);
-      let err = wrap(want - yaw), ahead = null, near = false;
-      for (const d of [1.2, 2.4, 3.6, 5]) { // a fan of feelers: straight ahead and a shoulder-width either side
-        for (const w of [0, -0.55, 0.55]) {
-          const h = probe([[P.pos.x + fx * d - fz * w, P.pos.z + fz * d + fx * w]], P.pos.y);
-          if (h && (!ahead || h.height > ahead.height)) { ahead = h; near = d < 3; }
-        }
-        if (ahead && ahead.height > 0.45) break;
-      }
-      if (ahead && ahead.height > 0.45) {
-        err = (ahead.nx * fz - ahead.nz * fx) >= 0 ? -1.4 : 1.4;
-        if (near) DEMO.goal = { x: P.pos.x - fx * 12, z: P.pos.z - fz * 12 }, DEMO.goalT = 4; // boxed in: head back the way we came
-      }
-      inp.lx = P.state === 'ground' ? clamp(-err * 1.4, -0.85, 0.85) : 0; // no stick in the air, or the board spins out
-      if (P.state === 'ground' && P.s < 4.6 && !P.onTrans && !(ahead && ahead.height > 0.45 && near)) pad.cur.X = true;
-      if (P.state === 'ground') {
-        DEMO.trickT -= dt;
-        const small = ahead && ahead.height <= 0.45 && ahead.height > 0.1;
-        if ((DEMO.trickT <= 0 || small) && P.s > 3 && !P.onTrans && !P.manual && Math.abs(err) < 0.5 && Math.abs(P.turnRate) < 0.35) {
-          DEMO.trickT = 2.2 + Math.random() * 2.5;
-          doPop({ name: small ? 'Ollie' : DEMO_TRICKS[Math.floor(Math.random() * DEMO_TRICKS.length)], nollie: false, strength: 0.75 + Math.random() * 0.25 });
-        }
-      }
-    }
-    acc += dt;
-    while (acc >= DT) {
-      acc -= DT;
-      if (P.state === 'ground') stepGround(DT);
-      else if (P.state === 'air') stepAir(DT);
-      else if (P.state === 'grind') stepGrind(DT);
-      else if (P.state === 'plant') stepPlant(DT);
-      else if (P.state === 'walk') stepWalk(DT);
-      else if (P.state === 'trans') stepTrans(DT);
-      else if (P.state === 'bail') stepBail(DT);
-      stepBoard(DT);
-    }
-  } finally {
-    DEMO.run = false; Object.assign(inp, keep); pad.cur = cur; pad.down = dn; pad.up = up;
-  }
-  // stuck on something, slowed to a stop, fell or wandered off: start the run again
-  DEMO.stuckT = P.state === 'ground' && P.s < 1 ? DEMO.stuckT + dt : 0;
-  DEMO.bailT = P.state === 'bail' || P.state === 'walk' || P.state === 'trans' ? DEMO.bailT + dt : 0;
-  const b = (MAPS[curMap] || MAPS.yard).bounds, out = P.pos.x < b[0] || P.pos.x > b[2] || P.pos.z < b[1] || P.pos.z > b[3];
-  if (DEMO.stuckT > 1.6 || DEMO.bailT > 2.4 || out || P.pos.y < -20) demoBegin();
+    const db = await myDb();
+    const all = await new Promise((res, rej) => { const q = db.transaction('songs').objectStore('songs').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); });
+    MYM.songs = all.sort((a, b) => a.id - b.id);
+    MYM.idx = Math.min(store.get('myIdx', 0), Math.max(0, MYM.songs.length - 1));
+  } catch (e) { MYM.songs = []; }
 }
-// a slow cinematic orbit around the skater, framed above the tiles
-function demoCamera(dt) {
-  DEMO.orbit += dt * 0.12;
-  const portrait = innerHeight > innerWidth, r = portrait ? 7.5 : 5.6, base = P.pos;
-  const yaw = travelYaw() + 2.2 + Math.sin(DEMO.orbit) * 1.1;
-  const want = new THREE.Vector3(base.x + Math.sin(yaw) * r, base.y + 1.6 + Math.sin(DEMO.orbit * 0.7) * 0.4, base.z + Math.cos(yaw) * r);
-  want.y = Math.max(want.y, groundTop(want.x, want.z) + 0.6);
-  const look = new THREE.Vector3(base.x, base.y + (portrait ? -0.8 : 0.35), base.z);
-  if (innerWidth > 900) { // keep him right of the What's new panel
-    const dx = base.x - want.x, dz = base.z - want.z, d = Math.hypot(dx, dz) || 1;
-    look.x -= (-dz / d) * 0.9; look.z -= (dx / d) * 0.9;
-  }
-  if (DEMO.snap) { DEMO.cam.copy(want); DEMO.look.copy(look); DEMO.snap = false; }
-  DEMO.cam.lerp(want, Math.min(1, dt * 2.2)); DEMO.look.lerp(look, Math.min(1, dt * 10));
-  camera.position.copy(DEMO.cam); camera.lookAt(DEMO.look);
-  const f = portrait ? 62 : 50; if (camera.fov !== f) { camera.fov = f; camera.updateProjectionMatrix(); }
-  camState.fov = f;
+async function myAdd(files) {
+  const add = [...files].filter(f => /^audio\//.test(f.type) || /\.(mp3|m4a|aac|ogg|oga|wav|flac|opus|webm)$/i.test(f.name));
+  if (!add.length) { toast('Those files aren\'t songs'); return; }
+  const t = Date.now(), fresh = add.map((f, i) => ({ id: t + i, name: f.name, type: f.type, data: f }));
+  try {
+    const db = await myDb();
+    await new Promise((res, rej) => { const tx = db.transaction('songs', 'readwrite'), st = tx.objectStore('songs'); for (const s of fresh) st.put(s); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  } catch (e) { toast('Couldn\'t save the songs on this device, they\'ll play until you close the game'); }
+  const was = MYM.songs.length; MYM.songs.push(...fresh);
+  toast('<b>Added</b> ' + fresh.length + (fresh.length === 1 ? ' song' : ' songs'));
+  if (!was) { MYM.idx = 0; MYM.paused = false; store.set('myPaused', false); myPlay(0); }
+  if (curScreen() && curScreen().id === 'music') renderScreen();
 }
+async function myClear() {
+  try { const db = await myDb(); await new Promise((res) => { const tx = db.transaction('songs', 'readwrite'); tx.objectStore('songs').clear(); tx.oncomplete = res; tx.onerror = res; }); } catch (e) { }
+  myStop(); MYM.songs = []; MYM.idx = 0; store.set('myIdx', 0);
+  toast('Your songs were removed from this device');
+}
+function myStop() { if (MYM.el) { MYM.el.pause(); MYM.el.removeAttribute('src'); MYM.el.load(); } if (MYM.url) { URL.revokeObjectURL(MYM.url); MYM.url = null; } }
+function myPlay(i, quiet) {
+  if (!MYM.songs.length) return;
+  MYM.idx = (i + MYM.songs.length) % MYM.songs.length; store.set('myIdx', MYM.idx);
+  myStop();
+  const s = MYM.songs[MYM.idx];
+  if (!MYM.el) {
+    MYM.el = new Audio(); MYM.el.preload = 'auto';
+    MYM.el.addEventListener('ended', () => myPlay(MYM.idx + 1));
+    MYM.el.addEventListener('error', () => { if (MYM.el.getAttribute('src')) { MYM.bad = (MYM.bad || 0) + 1; if (MYM.bad < MYM.songs.length) myPlay(MYM.idx + 1); } });
+    MYM.el.addEventListener('playing', () => { MYM.bad = 0; });
+  }
+  MYM.url = URL.createObjectURL(s.data); MYM.el.src = MYM.url; MYM.el.volume = MYM.vol;
+  if (!MYM.paused && !BOOT.active) MYM.el.play().catch(() => { });
+  if (!quiet) nowPlaying();
+  if (curScreen() && curScreen().id === 'music') renderScreen();
+}
+function myToggle() {
+  if (!MYM.songs.length) return;
+  MYM.paused = !MYM.paused; store.set('myPaused', MYM.paused);
+  if (!MYM.el || !MYM.el.getAttribute('src')) myPlay(MYM.idx);
+  else if (MYM.paused) MYM.el.pause(); else { MYM.el.play().catch(() => { }); nowPlaying(); }
+}
+function myPick() { const f = $('musicFile'); f.value = ''; f.click(); }
+$('musicFile').addEventListener('change', (e) => { if (e.target.files && e.target.files.length) myAdd(e.target.files); });
+// the Skate-style "now playing" card in the corner
+function nowPlaying() {
+  const s = MYM.songs[MYM.idx]; if (!s) return;
+  const n = songName(s.name);
+  $('npTitle').textContent = n.title; $('npArtist').textContent = n.artist || 'Your music';
+  const el = $('np'); el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); MYM.npT = 5;
+}
+// runs every frame: who gets the speakers, with smooth fades
+function myTick(dt) {
+  if (MYM.npT > 0) { MYM.npT -= dt; if (MYM.npT <= 0) $('np').classList.remove('on'); }
+  const vol = (S.music / 100) * (document.hidden ? 0 : 1);
+  const onTitle = mode === 'title' || (mode === 'menu' && UI.stack[0] && UI.stack[0].id === 'title');
+  const mine = MYM.songs.length > 0 && !MYM.paused && !BOOT.active;
+  if (mine && !MYM.shown && MYM.el && !MYM.el.paused) { MYM.shown = true; nowPlaying(); }
+  if (MYM.el) {
+    MYM.vol += ((mine ? vol * 0.9 : 0) - MYM.vol) * Math.min(1, dt * 4); MYM.el.volume = clamp(MYM.vol, 0, 1);
+    if (mine && MYM.el.paused && MYM.el.getAttribute('src') && !MYM.el.ended) MYM.el.play().catch(() => { });
+  } else if (mine) myPlay(MYM.idx, true);
+  // the menu song (when there is one) plays on the menus only when you have no songs of your own
+  const menuOn = onTitle && !mine && !BOOT.active && MYM.menuOk;
+  if (MYM.menu) {
+    MYM.menu.volume = clamp(MYM.menu.volume + ((menuOn ? vol * 0.8 : 0) - MYM.menu.volume) * Math.min(1, dt * 3), 0, 1);
+    if (menuOn && MYM.menu.paused) MYM.menu.play().catch(() => { });
+    if (!menuOn && !MYM.menu.paused && MYM.menu.volume < 0.01) MYM.menu.pause();
+  }
+  return { mine, menuOn }; // the built-in beat steps aside for either one
+}
+function myMenuTrack() { // optional: menu_music.mp3 next to the game; if it isn't there the built-in beat plays
+  const a = new Audio(); a.loop = true; a.preload = 'auto'; a.volume = 0;
+  a.addEventListener('canplaythrough', () => { MYM.menuOk = true; }, { once: true });
+  a.addEventListener('error', () => { MYM.menuOk = false; }, { once: true });
+  a.src = MENU_TRACK; MYM.menu = a;
+}
+function musicScreen() {
+  const touchy = inp.mode === 'pad' ? ' (use the mouse or touch for this one)' : '';
+  return {
+    id: 'music', title: 'Music',
+    items: () => {
+      const s = MYM.songs[MYM.idx], n = s && songName(s.name), has = MYM.songs.length > 0;
+      const list = MYM.songs.map((x, i) => { const m = songName(x.name); return { label: m.title, sub: m.artist ? escapeHtml(m.artist) : '', value: i === MYM.idx ? (MYM.paused ? '❚❚' : '♪ Playing') : '', run: () => { MYM.paused = false; store.set('myPaused', false); myPlay(i); } }; });
+      return [
+        ...(has ? [
+          { label: MYM.paused ? 'Play' : 'Pause', big: true, sub: n ? escapeHtml(n.title + (n.artist ? ' · ' + n.artist : '')) : '', run: () => { myToggle(); renderScreen(); } },
+          { label: 'Next song', run: () => { MYM.paused = false; store.set('myPaused', false); myPlay(MYM.idx + 1); } },
+          { label: 'Previous song', run: () => { MYM.paused = false; store.set('myPaused', false); myPlay(MYM.idx - 1); } }
+        ] : []),
+        { label: 'Add songs', big: !has, sub: 'Pick music files from this ' + (inp.mode === 'touch' ? 'phone' : 'computer') + '. They stay on this device and are never uploaded.' + touchy, run: () => myPick() },
+        { type: 'slider', key: 'music', label: 'Music volume', min: 0, max: 100, step: 5 },
+        ...(has ? [{ type: 'section', label: 'Your songs (' + MYM.songs.length + ')' }, ...list,
+          { label: MYM.clearArm > performance.now() ? 'Press again to remove them all' : 'Remove my songs', sub: 'Takes them off this device. The files on your computer or phone stay.', run: () => { if (MYM.clearArm > performance.now()) { MYM.clearArm = 0; myClear().then(() => renderScreen()); } else { MYM.clearArm = performance.now() + 4000; renderScreen(); } } }] : [])
+      ];
+    },
+    side: () => '<h3>Your music</h3><p>' + (MYM.songs.length ? 'Your songs play everywhere in the game, in order, then start over.' : 'Add songs from your own device and they play while you skate and on the menus.') + '</p><p style="opacity:.7">Open this anytime: ' + (inp.mode === 'touch' ? 'tap ♪' : inp.mode === 'pad' ? 'hold ' + glyph('Menu') : 'press M') + '.</p>'
+  };
+}
+myLoad().then(() => { if (MYM.songs.length) myPlay(MYM.idx, true); });
+myMenuTrack();
+
+/* =========================================================================
+   GAME MODES
+   - Own the Spot: as many points as you can before the 2:00 timer runs out.
+     Solo (saves your best per spot) or a group round with everyone online
+     at the same spot, highest score wins.
+   - S.T.E.E.Z.E: game of S.K.A.T.E. rules. The setter lands any trick, the
+     other skater has to land the same one or take a letter. Miss your set and
+     the other skater sets. Spell S.T.E.E.Z.E and you lose. Against the CPU or
+     against someone online at your spot.
+   Online modes ride on presence ("g"), so they work on the website relay
+   and in Claude rooms alike, with no extra channel.
+   ========================================================================= */
+const WORD = 'STEEZE', OTS_DUR = 120;
+const MODE = { jam: null, duel: null, lastAirT: -9, pub: '', seen: new Map(), offerT: new Map() };
+NET.gid = NET.gid || 'g' + Math.random().toString(36).slice(2, 10);
+const trickNorm = (n) => String(n).replace(/ \(sketchy\)| \(scraped\)/, '').trim();
+const fmtTime = (s) => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+// other skaters at your spot who are in the game right now, with whatever they published
+function modePeers() { return [...NET.peers.values()].filter(a => a.g && a.g.id && a.map === curMap && !a.hidden); }
+function modePeer(gid) { return [...NET.peers.values()].find(a => a.g && a.g.id === gid); }
+function modePublish() { // what the other skaters can see of my game
+  const g = { id: NET.gid };
+  const J = MODE.jam; if (J && J.group) g.jam = { id: J.id, m: J.map, at: J.at, sc: J.score, host: J.host };
+  const D = MODE.duel; if (D && D.kind === 'net') g.duel = { id: D.id, vs: D.opp.gid, first: D.firstGid, log: D.me.log.slice(-40) };
+  MODE.pub = JSON.stringify(g);
+}
+
+/* ---------------------------- Own the Spot ---------------------------- */
+function jamStart(group, join) {
+  modeQuit(true);
+  const now = Date.now();
+  MODE.jam = join ? { id: join.id, map: join.m, at: join.at, score: 0, group: true, host: join.host, best: store.get('ots_' + curMap, 0), banked: false, lastCount: 99 }
+    : { id: 'j' + Math.random().toString(36).slice(2, 9), map: curMap, at: now + (group ? 12000 : 3500), score: 0, group, host: NET.name, best: store.get('ots_' + curMap, 0), banked: false, lastCount: 99 };
+  modePublish(); modeBarShow();
+  if (group && !join) toast('<b>Own the Spot</b> starts in 12 seconds. Everyone at ' + escapeHtml((MAPS[curMap] || MAPS.yard).name) + ' can join from Game modes.');
+}
+function jamTick() {
+  const J = MODE.jam; if (!J) return;
+  if (J.map !== curMap) { modeQuit(); toast('Own the Spot ended: you left the spot'); return; }
+  const now = Date.now(), toGo = (J.at - now) / 1000, left = J.at / 1000 + OTS_DUR - now / 1000;
+  if (toGo > 0) {
+    const c = Math.ceil(toGo);
+    if (c <= 3 && c !== J.lastCount) { J.lastCount = c; callout(String(c), 'Own the Spot'); audio.blip(); }
+    modeBar('OWN THE SPOT', 'Starts in ' + c, J.group ? modeJamBoard(3) : 'Best here ' + J.best.toLocaleString());
+    return;
+  }
+  if (J.lastCount !== 0) { J.lastCount = 0; callout('GO', 'Score as much as you can'); loseLineQuiet(); audio.blip(); }
+  if (left <= 0) { jamEnd(); return; }
+  modeBar('OWN THE SPOT', fmtTime(left), (J.score + (line.active ? Math.round(line.score * lineMult()) : 0)).toLocaleString() + ' pts' + (J.group ? ' · ' + modeJamBoard(3) : J.best ? ' · best ' + J.best.toLocaleString() : ''), left < 10);
+}
+function jamBank(pts) { const J = MODE.jam; if (J && Date.now() >= J.at && Date.now() <= J.at + OTS_DUR * 1000 + 400) { J.score += pts; modePublish(); } }
+function modeJamBoard(n) { // "You 4,200 · Kev 3,100" for the group round
+  const J = MODE.jam, rows = [{ n: 'You', s: J.score, me: true }];
+  for (const a of modePeers()) if (a.g.jam && a.g.jam.id === J.id) rows.push({ n: a.name, s: a.g.jam.sc || 0 });
+  rows.sort((a, b) => b.s - a.s);
+  return rows.slice(0, n).map((r, i) => (i + 1) + '. ' + r.n + ' ' + r.s.toLocaleString()).join('  ');
+}
+function jamEnd() {
+  const J = MODE.jam;
+  if (line.active && P.state !== 'bail') bankLine(); // the line you were on when the horn went still counts
+  J.done = true; modeBarHide();
+  callout('TIME', J.score.toLocaleString() + ' pts');
+  const prevBest = store.get('ots_' + J.map, 0), newBest = J.score > prevBest;
+  if (newBest) store.set('ots_' + J.map, J.score);
+  modePublish();
+  setTimeout(() => { // give everyone's last score a moment to arrive
+    const rows = [{ n: 'You', s: J.score, me: true }];
+    if (J.group) for (const a of modePeers()) if (a.g.jam && a.g.jam.id === J.id) rows.push({ n: a.name, s: a.g.jam.sc || 0 });
+    rows.sort((a, b) => b.s - a.s);
+    const place = rows.findIndex(r => r.me) + 1;
+    const head = J.group ? (place === 1 ? 'You own the spot!' : 'You finished #' + place) : newBest ? 'New best here!' : 'Time\'s up';
+    openScreen({
+      id: 'results', title: head,
+      items: () => [
+        { label: 'Play again', big: true, sub: J.group ? 'Starts a new solo round' : '2 minutes, same spot', run: () => { closeAllToPlay(); jamStart(false); } },
+        { label: 'Keep skating', run: () => closeAllToPlay() },
+        { label: 'Game modes', run: () => { UI.stack = []; openScreen(modesScreen()); } }
+      ],
+      side: () => '<h3>' + escapeHtml((MAPS[J.map] || MAPS.yard).name) + '</h3>'
+        + rows.map((r, i) => '<p style="display:flex;justify-content:space-between;gap:16px;margin:6px 0' + (r.me ? ';color:var(--curb);font-weight:700' : '') + '"><span>' + (i + 1) + '. ' + escapeHtml(r.n) + '</span><b>' + r.s.toLocaleString() + '</b></p>').join('')
+        + '<p style="opacity:.7">Best here ' + Math.max(prevBest, J.score).toLocaleString() + (newBest && prevBest ? ' (was ' + prevBest.toLocaleString() + ')' : '') + '</p>'
+    });
+    if (MODE.jam === J) MODE.jam = null; modePublish();
+  }, J.group ? 3500 : 900);
+}
+
+/* ------------------------------ S.T.E.E.Z.E ------------------------------ */
+// one shared rulebook: both players' attempt logs are replayed in turn order, so both screens agree
+function duelState(D) {
+  const log = { me: D.me.log, opp: D.opp.log }, ptr = { me: 0, opp: 0 }, letters = { me: 0, opp: 0 };
+  let setter = D.firstGid === NET.gid ? 'me' : 'opp', phase = 'set', trick = null, last = null;
+  const other = (w) => w === 'me' ? 'opp' : 'me';
+  for (;;) {
+    const who = phase === 'set' ? setter : other(setter);
+    if (ptr[who] >= log[who].length) return { turn: who, phase, trick, setter, letters, last, over: false };
+    const t = log[who][ptr[who]++];
+    if (phase === 'set') { if (t) { trick = t; phase = 'copy'; last = { who, t, ok: true, set: true }; } else { last = { who, t: '', ok: false, set: true }; setter = other(setter); } }
+    else {
+      const ok = t === trick; last = { who, t: trick, ok, set: false };
+      if (!ok && ++letters[who] >= WORD.length) return { turn: null, letters, last, over: true, winner: other(who) };
+      phase = 'set'; trick = null;
+    }
+  }
+}
+const lettersHtml = (n) => [...WORD].map((c, i) => '<i class="' + (i < n ? 'on' : '') + '">' + c + '</i>').join('');
+function duelStart(kind, opp, accept) {
+  modeQuit(true);
+  MODE.duel = {
+    kind, id: accept ? accept.id : 'd' + Math.random().toString(36).slice(2, 9),
+    me: { log: [] }, opp: { log: [], name: kind === 'cpu' ? 'CPU' : opp.name, gid: opp ? opp.g.id : 'cpu' },
+    firstGid: accept ? accept.first : NET.gid, accepted: kind === 'cpu' || !!accept, pending: null, cpuT: 0, seenT: Date.now(), startT: Date.now(), lastKey: ''
+  };
+  modePublish(); modeBarShow();
+  if (kind === 'cpu') callout('S.T.E.E.Z.E', 'You set first. Land any trick');
+  else if (accept) callout('S.T.E.E.Z.E', 'vs ' + opp.name);
+  else toast('Challenge sent to <b>' + escapeHtml(opp.name) + '</b>. Waiting for them to accept…');
+}
+function duelAct(t) { // my attempt is done: the trick I landed, or '' for a miss
+  const D = MODE.duel; if (!D) return;
+  if (t && D.pending) D.copyV = D.pending.v;
+  D.me.log.push(t); D.pending = null; modePublish(); duelAnnounce();
+}
+function duelAnnounce() {
+  const D = MODE.duel, st = duelState(D), L = st.last; if (!L) return;
+  const key = D.me.log.length + ':' + D.opp.log.length; if (key === D.lastKey) return; D.lastKey = key;
+  const who = L.who === 'me' ? 'You' : D.opp.name;
+  if (st.over) return duelEnd(st);
+  if (L.set) callout(L.ok ? who + (L.who === 'me' ? ' set it' : ' set a trick') : who + ' missed the set', L.ok ? L.t : (st.turn === 'me' ? 'Your set' : D.opp.name + ' sets'), !L.ok);
+  else callout(L.ok ? who + ' matched it' : (L.who === 'me' ? 'You get a letter' : D.opp.name + ' gets a letter'), L.ok ? L.t : WORD.slice(0, st.letters[L.who]).split('').join('.'), !L.ok && L.who === 'me');
+}
+function duelTick(dt) {
+  const D = MODE.duel; if (!D) return;
+  if (D.kind === 'net') {
+    const a = modePeer(D.opp.gid), g = a && a.g && a.g.duel;
+    if (g && g.id === D.id && g.vs === NET.gid) { D.seenT = Date.now(); if (!D.accepted) { D.accepted = true; callout('S.T.E.E.Z.E', D.opp.name + ' accepted. You set first'); } if (Array.isArray(g.log)) D.opp.log = g.log.map(x => String(x).slice(0, 60)); }
+    if (!D.accepted && Date.now() - D.startT > 60000) { modeQuit(); toast(escapeHtml(D.opp.name) + ' didn\'t accept the challenge'); return; }
+    if (D.accepted && Date.now() - D.seenT > 25000) { modeQuit(); toast(escapeHtml(D.opp.name) + ' left the game of S.T.E.E.Z.E'); return; }
+    if (!D.accepted) { modeBar('S.T.E.E.Z.E', 'Waiting…', 'Challenge sent to ' + D.opp.name); return; }
+  }
+  const st = duelState(D);
+  duelAnnounce(); if (!MODE.duel) return;
+  if (st.over) return;
+  if (st.turn === 'opp' && D.kind === 'cpu') { // the CPU takes its go
+    D.cpuT += dt;
+    if (!D.cpuPick) {
+      const opts = Object.keys(TRICKS).filter(n => allowTrick(n) === n), w = { 'Ollie': 1, 'Kickflip': 3, 'Heelflip': 3, 'Pop Shove-it': 2, 'FS Pop Shove-it': 2, '360 Flip': 1.5, 'Laser Flip': 1 };
+      let r = Math.random() * opts.reduce((s, n) => s + (w[n] || 1), 0), pick = opts[0]; for (const n of opts) { r -= w[n] || 1; if (r <= 0) { pick = n; break; } }
+      D.cpuPick = st.phase === 'set' ? pick : st.trick;
+    }
+    if (D.cpuT > 3.2) {
+      const v = st.phase === 'set' ? TRICKS[D.cpuPick].value : (D.copyV || 250);
+      const p = st.phase === 'set' ? clamp(1.02 - v / 1100, 0.45, 0.95) : clamp(1.0 - v / 1000, 0.22, 0.93);
+      D.opp.log.push(Math.random() < p ? D.cpuPick : ''); D.cpuT = 0; D.cpuPick = null;
+      return;
+    }
+  }
+  const status = st.turn === 'me' ? (st.phase === 'set' ? 'Your set: land any trick' : 'Match it: ' + st.trick)
+    : D.kind === 'cpu' ? (st.phase === 'set' ? 'CPU is setting…' : 'CPU is trying ' + st.trick + '…') : (st.phase === 'set' ? D.opp.name + ' is setting…' : D.opp.name + ' is trying ' + st.trick + '…');
+  modeBar('S.T.E.E.Z.E', '<span class="ltr"><em>You</em>' + lettersHtml(st.letters.me) + '</span><span class="ltr"><em>' + escapeHtml(D.opp.name) + '</em>' + lettersHtml(st.letters.opp) + '</span>', status, false, true);
+}
+function duelEnd(st) {
+  const D = MODE.duel, won = st.winner === 'me';
+  callout(won ? 'You win' : D.opp.name + ' wins', 'S.T.E.E.Z.E', !won);
+  const wins = store.get('steezeWins', 0) + (won ? 1 : 0); if (won) store.set('steezeWins', wins);
+  modeBarHide();
+  setTimeout(() => {
+    openScreen({
+      id: 'results', title: won ? 'You win!' : D.opp.name + ' wins',
+      items: () => [
+        ...(D.kind === 'cpu' ? [{ label: 'Rematch', big: true, run: () => { closeAllToPlay(); duelStart('cpu'); } }] : []),
+        { label: 'Keep skating', big: D.kind !== 'cpu', run: () => closeAllToPlay() },
+        { label: 'Game modes', run: () => { UI.stack = []; openScreen(modesScreen()); } }
+      ],
+      side: () => '<h3>Final letters</h3><p class="ltrs"><span class="ltr"><em>You</em>' + lettersHtml(st.letters.me) + '</span></p><p class="ltrs"><span class="ltr"><em>' + escapeHtml(D.opp.name) + '</em>' + lettersHtml(st.letters.opp) + '</span></p><p style="opacity:.7">Games won: ' + wins + '</p>'
+    });
+    if (MODE.duel === D) { MODE.duel = null; modePublish(); }
+  }, 1500);
+  D.over = true;
+}
+
+/* ------------------------------ hooks from the game ------------------------------ */
+function modeTrick(name, v) { // a trick just landed
+  const D = MODE.duel; if (!D || D.over || !D.accepted) return;
+  const st = duelState(D); if (st.over || st.turn !== 'me') return;
+  const n = trickNorm(name); if (n === 'Powerslide') return;
+  if (!D.pending) D.pending = { t: n, v };
+}
+function modeBank(pts) {
+  jamBank(pts);
+  const D = MODE.duel; if (D && D.pending && !D.over) duelAct(D.pending.t);
+}
+function modeBail() {
+  const D = MODE.duel; if (!D || D.over || !D.accepted) return;
+  const st = duelState(D); if (st.over || st.turn !== 'me') return;
+  if (D.pending || clock - MODE.lastAirT < 0.8) duelAct(''); // bailing a trick is a miss; running into a wall while rolling isn't
+}
+function modeTick(dt) {
+  if (P.state === 'air' || P.state === 'grind' || P.state === 'plant') MODE.lastAirT = clock;
+  if (MODE.jam && !MODE.jam.done && !MODE.jam.group && mode !== 'play') MODE.jam.at += dt * 1000; // a solo clock stops while you're paused
+  if (MODE.jam && !MODE.jam.done && mode === 'play') jamTick();
+  if (MODE.duel && !MODE.duel.over) duelTick(dt);
+  // invitations from other skaters at this spot
+  if (mode === 'play') for (const a of modePeers()) {
+    const g = a.g, k = (g.duel && g.duel.vs === NET.gid && !(MODE.duel && MODE.duel.id === g.duel.id)) ? 'd' + g.duel.id : (g.jam && g.jam.m === curMap && g.jam.at > Date.now() + 2000 && !(MODE.jam && MODE.jam.id === g.jam.id)) ? 'j' + g.jam.id : '';
+    if (k && !MODE.offerT.has(k)) { MODE.offerT.set(k, 1); toast(k[0] === 'd' ? '<b>' + escapeHtml(a.name) + '</b> challenged you to S.T.E.E.Z.E. Accept it in Game modes.' : '<b>' + escapeHtml(a.name) + '</b> started Own the Spot. Join it in Game modes.'); }
+  }
+}
+function modeQuit(silent) {
+  if (MODE.duel && MODE.duel.kind === 'net' && !MODE.duel.over && !silent) toast('You left the game of S.T.E.E.Z.E');
+  MODE.jam = null; MODE.duel = null; modeBarHide(); modePublish();
+}
+/* ------------------------------ the bar at the top ------------------------------ */
+function modeBarShow() { $('modebar').hidden = false; }
+function modeBarHide() { $('modebar').hidden = true; }
+function modeBar(title, big, sub, hot, html) {
+  const k = title + '|' + big + '|' + sub + '|' + hot; if (k === MODE.barKey) return; MODE.barKey = k;
+  $('mbTitle').textContent = title; $('mbBig').innerHTML = html ? big : escapeHtml(big); $('mbSub').textContent = sub;
+  $('modebar').classList.toggle('hot', !!hot); $('modebar').classList.toggle('duel', !!html);
+}
+/* ------------------------------ menu ------------------------------ */
+function modesScreen() {
+  return {
+    id: 'modes', title: 'Game modes',
+    items: () => {
+      const peers = modePeers(), spot = (MAPS[curMap] || MAPS.yard).name, now = Date.now(), go = (f) => () => { closeAllToPlay(); f(); };
+      const jams = peers.filter(a => a.g.jam && a.g.jam.m === curMap && a.g.jam.at > now + 1500 && !(MODE.jam && MODE.jam.id === a.g.jam.id));
+      const offers = peers.filter(a => a.g.duel && a.g.duel.vs === NET.gid && !(MODE.duel && MODE.duel.id === a.g.duel.id));
+      const busy = MODE.jam || MODE.duel;
+      return [
+        ...(busy ? [{ label: MODE.jam ? 'Quit Own the Spot' : 'Quit S.T.E.E.Z.E', big: true, run: () => { modeQuit(); closeAllToPlay(); } }] : []),
+        { type: 'section', label: 'Own the Spot' },
+        ...jams.map(a => ({ label: 'Join ' + a.name + '\'s round', big: true, sub: 'Starts in ' + Math.ceil((a.g.jam.at - now) / 1000) + 's at ' + escapeHtml(spot), run: go(() => jamStart(true, a.g.jam)) })),
+        { label: 'Solo round', sub: '2 minutes to score as much as you can at ' + escapeHtml(spot), value: store.get('ots_' + curMap, 0) ? 'Best ' + store.get('ots_' + curMap, 0).toLocaleString() : '', run: go(() => jamStart(false)) },
+        ...(peers.length ? [{ label: 'Group round', sub: 'Everyone here gets 12 seconds to join, then the highest score wins', value: peers.length + 1 + ' here', run: go(() => jamStart(true)) }] : []),
+        { type: 'section', label: 'S.T.E.E.Z.E' },
+        ...offers.map(a => ({ label: 'Accept ' + a.name + '\'s challenge', big: true, sub: 'They set first', run: go(() => duelStart('net', a, a.g.duel)) })),
+        { label: 'Vs CPU', sub: 'Land a trick, then the CPU has to match it. Miss and take a letter.', value: store.get('steezeWins', 0) ? store.get('steezeWins', 0) + ' wins' : '', run: go(() => duelStart('cpu')) },
+        ...peers.filter(a => !offers.includes(a)).map(a => ({ label: 'Challenge ' + a.name, sub: 'Online at ' + escapeHtml(spot), run: go(() => duelStart('net', a)) })),
+        ...(!peers.length ? [{ label: 'Nobody else here right now', sub: NET.room ? 'When other skaters are at this spot you can challenge them or start a group round' : 'Online play is not available right now', value: '' }] : [])
+      ];
+    },
+    side: () => '<h3>Own the Spot</h3><p>Two minutes on the clock. Every line you bank counts toward your score.</p><h3>S.T.E.E.Z.E</h3><p>The setter lands any trick and the other skater has to land the same one. Miss the copy and you take a letter. Miss your set and they set. Spell S.T.E.E.Z.E and you lose.</p>'
+  };
+}
+modePublish();
 
 /* =========================================================================
    GAME LOOP
@@ -6489,13 +6796,22 @@ function touchUiTick() {
   const show = inp.mode === 'touch' && (mode === 'play' || mode === 'map' || mode === 'replay') && !curScreen();
   if (show !== touchShown) { touchShown = show; $('touchui').hidden = !show; if (!show) TOUCHB.clear(); }
 }
+// the main menu sits over a soft, blurred still of the spot
+let menuBg = null, menuDrawT = 0;
+function menuBgTick(now) {
+  const on = !CL.on && (mode === 'title' || (mode === 'menu' && UI.stack[0] && UI.stack[0].id === 'title'));
+  if (on !== menuBg) { menuBg = on; document.body.classList.toggle('menublur', on); skater.visible = !on; if (blob) blob.visible = !on; menuDrawT = 0; }
+  if (!on) return true;
+  if (now - menuDrawT < 500) return false;
+  menuDrawT = now; return true;
+}
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (!(window.__steeze && window.__steeze.hold)) tick(dt);
   if (window.__steeze && window.__steeze.camOverride) window.__steeze.camOverride(camera, P, skater);
-  extPose(); try { netTick(dt); } catch (e) { } touchUiTick(); audio.musicTick(); if (BOOT.active && !BOOT.leaving && mode !== 'title' && mode !== 'menu') bootQuiet(); renderer.render(scene, camera);
-  if (previewDue && now > previewDue && (mode === 'play' || mode === 'title')) { // remember what this spot looks like for the spot menu
+  extPose(); try { netTick(dt); } catch (e) { } touchUiTick(); MYM.state = myTick(dt); audio.musicTick(); if (BOOT.active && !BOOT.leaving && mode !== 'title' && mode !== 'menu') bootQuiet(); const drew = menuBgTick(now) || !!(window.__steeze && window.__steeze.camOverride); if (drew) renderer.render(scene, camera);
+  if (drew && previewDue && now > previewDue && (mode === 'play' || mode === 'title')) { // remember what this spot looks like for the spot menu
     previewDue = 0;
     try { const c = document.createElement('canvas'); c.width = 384; c.height = 216; const g = c.getContext('2d'); const a = canvas.width / canvas.height, sw = a > 16 / 9 ? canvas.height * 16 / 9 : canvas.width, sh = sw * 9 / 16; g.drawImage(canvas, (canvas.width - sw) / 2, (canvas.height - sh) / 2, sw, sh, 0, 0, 384, 216); store.set('prev_' + curMap + '_' + S.tod, c.toDataURL('image/jpeg', 0.72)); } catch (e) { }
   }
@@ -6508,7 +6824,7 @@ function tick(dt) {
     if (BOOT.active) bootTick(dt); else menuInput(dt);
     clock += dt;
     if (CL.on) closetTick(dt);
-    if (mode === 'title') { if (!CL.on) demoTick(dt); animate(dt, clock); if (CL.on) stepCamera(dt, true); else demoCamera(dt); updateTOD(dt); }
+    if (mode === 'title') { animate(dt, clock); camState.orbit = 0.8; stepCamera(0, true); updateTOD(dt); }
     audio.update(true);
   } else if (mode === 'replay') { stepReplay(dt); audio.update(true); }
   else if (mode === 'map') {
@@ -6516,12 +6832,15 @@ function tick(dt) {
     else mapInput(dt);
     audio.update(true);
   }
+  try { modeTick(dt); } catch (e) { console.warn(e); }
   updateBoardParts(dt);
   keyDown.clear();
 }
 function gameTick(dt) {
   clock += dt;
-  if (pad.down.has('Menu') || keyDown.has('Escape') || keyDown.has('KeyP')) { openScreen(pauseScreen()); return; }
+  const menuB = tapHold('Menu', 0.45); // tap Menu pauses, hold it for the quick music panel
+  if (menuB === 'tap' || keyDown.has('Escape') || keyDown.has('KeyP')) { openScreen(pauseScreen()); return; }
+  if (menuB === 'hold' || pad.down.has('Music') || keyDown.has('KeyM')) { openScreen(musicScreen()); return; }
   const view = tapHold('View', 0.35);
   if (view === 'tap') { setMode2('map'); return; }
   if (view === 'hold') { openReplay(); return; }
@@ -6600,7 +6919,7 @@ window.__steeze = {
   replayBegin() { if (rep.frames.length < 2) return null; rep.live = snapTransforms(); rep.t0 = rep.frames[0].t; rep.t1 = rep.frames[rep.frames.length - 1].t; return [rep.t0, rep.t1]; },
   replaySeek(t) { const fr = frameAt(t); applyTransforms(fr.f); if (sun) { sun.position.copy(skater.position).addScaledVector(todSun, 30); sun.target.position.copy(skater.position); } return fr.p; },
   replayEnd() { if (rep.live) applyTransforms(rep.live); if (BOARD.attached) { leanG.add(boardRig); boardRig.position.set(0, 0, 0); boardRig.quaternion.identity(); } else placeBoardMesh(); },
-  BOARD, poles, applyTOD, loadMap, setLook, LOOK, LOOK_OPTS, B, openCloset, closeCloset, CL, BOARD_PARTS, EXT, THREE_V: THREE.Vector3, MAPS, STYLES, get curMap() { return curMap; }, SPOTS, LAMPS, camera, world, bail, getOff, getOn, callBoard, dropBoard, pickUpBoard, nearBoard, probe, R, skater, boardRig, CT, carryRest, NET, CLIP, store, TOUCHB, audio, BOOT, DEMO
+  BOARD, poles, applyTOD, loadMap, setLook, LOOK, LOOK_OPTS, B, openCloset, closeCloset, CL, BOARD_PARTS, EXT, THREE_V: THREE.Vector3, MAPS, STYLES, get curMap() { return curMap; }, SPOTS, LAMPS, camera, world, bail, getOff, getOn, callBoard, dropBoard, pickUpBoard, nearBoard, probe, R, skater, boardRig, CT, carryRest, NET, CLIP, store, TOUCHB, audio, BOOT, MYM, myAdd, musicScreen, MODE, jamStart, duelStart, modesScreen, duelState, line, addTrick, bankLine, loseLine, myLoad
 };
 onlineStart(); // multiplayer + account save, when the platform offers them
 </script>
