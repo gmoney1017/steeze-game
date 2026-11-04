@@ -432,14 +432,8 @@ const PUSH_STYLES = {
 const POSTURES = { upright: { label: 'Upright', bend: -0.12, crouch: -0.08 }, standard: { label: 'Standard', bend: 0, crouch: 0 }, hunched: { label: 'Hunched', bend: 0.16, crouch: 0.05 } };
 
 /* ------------------------------ settings ------------------------------ */
-const PRESETS = {
-  streamlined: { label: 'Streamlined', desc: 'Every assist on. Both push buttons push normally, landings and catches are forgiving, grinds barely wobble. Good for learning the flick.',
-    set: { landing: 'high', catch: 'full', grindAssist: 'high', grabRelease: 'auto', wallBails: 'forgiving', mongo: false } },
-  classic: { label: 'Classic', desc: 'The standard layout. X pushes with your back foot, A pushes mongo with your front foot. Normal landing and balance windows.',
-    set: { landing: 'normal', catch: 'normal', grindAssist: 'normal', grabRelease: 'sketchy', wallBails: 'normal', mongo: true } },
-  experienced: { label: 'Experienced', desc: 'Same layout as Classic with the assists off. Land straight, catch every flip, let go of grabs, and fight for your grinds.',
-    set: { landing: 'low', catch: 'off', grindAssist: 'off', grabRelease: 'bail', wallBails: 'normal', mongo: true } }
-};
+// one control setup for everyone: the Streamlined assists (forgiving landings and catches, steady grinds, auto grab release)
+const STREAMLINED = { landing: 'high', catch: 'full', grindAssist: 'high', grabRelease: 'auto', wallBails: 'forgiving' };
 const CAMS = {
   classic: { label: 'Classic', fov: 80, camDist: 26, camHeight: 10 },
   close: { label: 'Close', fov: 86, camDist: 21, camHeight: 9 },
@@ -447,8 +441,8 @@ const CAMS = {
   filmer: { label: 'Filmer fisheye', fov: 102, camDist: 17, camHeight: 5 }
 };
 const DEFAULTS = {
-  preset: 'classic', mongo: true, stance: 'regular', pushStyle: 'standard', posture: 'standard', trucks: 50, wheels: 50, flickSens: 50, deadzone: 15, vibration: true, vibeStr: 70,
-  look: null, map: 'plaza', tod: 'day', bailReset: 'getup', landing: 'normal', catch: 'normal', grindAssist: 'normal', grabRelease: 'sketchy', wallBails: 'normal',
+  ctrlV: 2, stance: 'regular', pushStyle: 'standard', posture: 'standard', trucks: 50, wheels: 50, flickSens: 50, deadzone: 15, vibration: true, vibeStr: 70,
+  look: null, map: 'plaza', tod: 'day', bailReset: 'getup', ...STREAMLINED,
   monitor: true, hints: true, trickNames: true,
   t_flips: true, t_shoves: true, t_360: true, t_nollie: true, t_manual: true, t_grabs: true, t_plant: true, t_slide: true, t_adjust: true,
   camPreset: 'classic', fov: 80, camDist: 26, camHeight: 10, camShake: true, airTrack: 35,
@@ -456,6 +450,7 @@ const DEFAULTS = {
 };
 const S = Object.assign({}, DEFAULTS, store.get('settings', {}));
 for (const k in S) if (!(k in DEFAULTS)) delete S[k];
+if (store.get('settings', {}).ctrlV !== 2) { Object.assign(S, STREAMLINED); S.ctrlV = 2; store.set('settings', S); } // move everyone onto Streamlined once; their other settings stay
 const D = {};
 function derive() {
   D.tol = { low: 0.42, normal: 0.62, high: 0.95 }[S.landing];
@@ -2777,12 +2772,12 @@ function clipDrive(dt, st) {
 
 /* =========================================================================
    INPUT — controller first. Every device writes into one virtual pad.
-   Classic layout:
-     LS steer/spin · RS flick tricks + board adjust · X push (back foot)
-     A push (front foot, mongo) · B brake / exit grind · Y get off board
+   Layout:
+     LS steer/spin · RS flick tricks + board adjust · A push (off board: sprint)
+     B brake / exit grind · Y get off board
      LT/RT grabs · RB handplant · LB gestures (hold) · View: map (tap) / replay (hold)
      Menu: pause · D-pad up: session marker (tap go / hold set) · D-pad down (hold): restart
-     D-pad left: camera · D-pad right: flick-it monitor
+     D-pad right: flick-it monitor (camera is set in Settings only, so it never overwrites a custom camera)
    Right stick convention: x right +, y DOWN + (pulled back toward you).
    ========================================================================= */
 const BTN = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'View', 'Menu', 'LS', 'RS', 'Up', 'Down', 'Left', 'Right'];
@@ -2856,12 +2851,12 @@ function pollInput(dt) {
   const manualKey = k('KeyC') || k('KeyV');
   // keyboard -> virtual buttons
   const kb = {
-    X: (k('KeyW') || k('Space')) && !manualKey, A: k('KeyR') && !manualKey, B: k('KeyS') && !manualKey, Y: k('KeyF'),
+    X: false, A: (k('KeyW') || k('Space')) && !manualKey, B: k('KeyS') && !manualKey, Y: k('KeyF'),
     LB: k('KeyH'), RB: k('KeyG'), LT: k('KeyQ'), RT: k('KeyE') || !!ms.rt,
     View: k('Tab'), Menu: k('Escape') || k('KeyP'), LS: false, RS: false,
-    Up: k('KeyT'), Down: k('Backspace'), Left: k('BracketLeft'), Right: k('BracketRight')
+    Up: k('KeyT'), Down: k('Backspace'), Left: false, Right: k('BracketRight')
   };
-  if (ts.tapPush > 0) { kb.X = true; ts.tapPush--; }
+  if (ts.tapPush > 0) { kb.A = true; ts.tapPush--; }
   let lx = (k('KeyD') ? 1 : 0) - (k('KeyA') ? 1 : 0);
   let fwd = (k('KeyW') ? 1 : 0) - (k('KeyS') ? 1 : 0);
   const tx = (k('ArrowRight') ? 1 : 0) - (k('ArrowLeft') ? 1 : 0), ty = (k('ArrowDown') ? 1 : 0) - (k('ArrowUp') ? 1 : 0);
@@ -3081,12 +3076,11 @@ function stepGround(dt) {
   let slope = P.gx * dx + P.gz * dzz;
   let cosA = 1 / Math.sqrt(1 + slope * slope), sinA = slope * cosA;
   P.onTrans = Math.abs(slope) > 0.25;
-  const pushBack = pad.cur.X || (!S.mongo && pad.cur.A), pushFront = S.mongo && pad.cur.A;
-  const tapped = pad.down.has('X') || pad.down.has('A');
-  if ((pushBack || pushFront) && !P.manual && !P.onTrans && flick.st !== 'loaded') startPush(pushFront && !pushBack ? 'front' : 'back', tapped);
+  const pushing = pad.cur.A, tapped = pad.down.has('A'); // A pushes
+  if (pushing && !P.manual && !P.onTrans && flick.st !== 'loaded') startPush('back', tapped);
   else if (P.pushQ && P.pushT < 0 && P.pushCd <= 0 && !P.manual && !P.onTrans && flick.st !== 'loaded') startPush(P.pushQ);
   // pumping: push down through transitions on the way down to gain speed
-  P.pumping = (pushBack || pushFront || inp.fwd > 0.5) && slope < -0.25 && !P.manual;
+  P.pumping = (pushing || inp.fwd > 0.5) && slope < -0.25 && !P.manual;
   if (P.pumping) P.s += 5.0 * Math.min(1, -sinA * 1.6) * dt;
 
   // powerslide: hold brake and throw the left stick hard to one side at speed (Shift on keyboard)
@@ -3578,7 +3572,7 @@ function stepTrans(dt) {
 function offBoardInput() {
   if (P.state === 'walk') {
     const w = P.walk;
-    if (pad.down.has('X') || pad.down.has('A')) w.sprint = Math.min(1, (w.sprint || 0) + 0.4);
+    if (pad.down.has('A')) w.sprint = Math.min(1, (w.sprint || 0) + 0.4);
     if (pad.down.has('B')) { if (P.hasBoard) dropBoard(); else if (nearBoard(1.8)) pickUpBoard(); }
   } else if (P.state === 'bail') {
     const B = P.bail;
@@ -4775,8 +4769,8 @@ function bankLine() {
   total += pts;
   if (pts > best) { best = pts; store.set('best', best); }
   if (pts >= 5000) chal('line');
-  modeBank(pts);
   callout(pts >= 1000 ? 'Line banked' : 'Banked', '+' + pts.toLocaleString());
+  modeBank(pts); // after the banked callout, so S.T.E.E.Z.E's "you matched it" is the one you see
   line.tricks = []; line.score = 0; line.count = {}; line.active = false;
   $('feed').innerHTML = '';
 }
@@ -5502,13 +5496,13 @@ function updateHud(dt) {
     if (P.state === 'grind') h = [['L', 'Balance against the needle'], ['R', 'Flick to pop out'], ['B', 'Hop off'], ...(P.grind.r.kind === 'coping' ? [['L', 'Pull back to drop in']] : [])];
     else if (P.state === 'air') h = [['L', 'Spin'], ['LT', 'Grab'], ['RT', 'Grab'], ['R', 'Board adjust'], ...(P.air.kind === 'vert' ? [['RB', 'Handplant at the coping']] : [])];
     else if (P.state === 'plant') h = [['RB', 'Hold to stall, let go to drop in']];
-    else if (P.state === 'walk' && P.hasBoard) h = [['L', 'Walk · push all the way to jog'], ['X', 'Tap to sprint'], ['Y', 'Hop on'], ['B', 'Set the board down'], ['LB', 'Gesture']];
-    else if (P.state === 'walk') h = [['L', 'Walk'], ['X', 'Tap to sprint'], ...(nearBoard(1.8) ? [['Y', 'Step on'], ['B', 'Pick it up']] : [['Y', 'Call your board']])];
+    else if (P.state === 'walk' && P.hasBoard) h = [['L', 'Walk · push all the way to jog'], ['A', 'Tap to sprint'], ['Y', 'Hop on'], ['B', 'Set the board down'], ['LB', 'Gesture']];
+    else if (P.state === 'walk') h = [['L', 'Walk'], ['A', 'Tap to sprint'], ...(nearBoard(1.8) ? [['Y', 'Step on'], ['B', 'Pick it up']] : [['Y', 'Call your board']])];
     else if (P.state === 'trans') h = [];
     else if (P.state === 'bail') h = P.bail.t > 0.3 && !P.bail.stay && S.bailReset !== 'marker' ? [['Y', 'Stay off the board']] : [];
     else if (P.manual) h = [['R', 'Hold half-way to balance']];
-    else if (P.state === 'ground' && P.onTrans) h = [['X', 'Pump on the way down'], ['L', 'Lean forward at the lip'], ['R', 'Flick to pop']];
-    else if (P.state === 'ground') h = [['X', 'Push'], ...(S.mongo ? [['A', 'Mongo push']] : []), ['B', 'Brake'], ['R', 'Pull back, flick up'], ['Y', 'Off board'], ['View', 'Map · hold for replay']];
+    else if (P.state === 'ground' && P.onTrans) h = [['A', 'Pump on the way down'], ['L', 'Lean forward at the lip'], ['R', 'Flick to pop']];
+    else if (P.state === 'ground') h = [['A', 'Push'], ['B', 'Brake'], ['R', 'Pull back, flick up'], ['Y', 'Off board'], ['View', 'Map · hold for replay']];
     if (inp.mode === 'touch') h = [['tap left', 'Push'], ['drag left', 'Steer'], ['drag right', 'Flick']];
   }
   const key = JSON.stringify(h) + inp.mode + inp.padStyle;
@@ -5531,7 +5525,6 @@ const OPT = {
   quality: [['low', 'Low-end PC'], ['high', 'High']],
   bailReset: [['getup', 'Get up and keep skating'], ['marker', 'Reset to last spot']]
 };
-const ASSIST_KEYS = ['landing', 'catch', 'grindAssist', 'grabRelease', 'wallBails', 'mongo'];
 const UI = { stack: [], focus: 0, rep: { dir: null, t: 0 } };
 let mode = 'title';
 function setMode2(m) {
@@ -5644,13 +5637,10 @@ function resetTab() {
   const scr = curScreen(); if (!scr || !scr.tabs) return;
   if (scr.id === 'closet') { const o = {}; for (const it of scr.tabs[scr.tab].items()) if (it.key !== 'style') o[it.key] = LOOK_DEFAULT[it.key]; setLook(o); toast('<b>Reset</b> ' + scr.tabs[scr.tab].label); renderScreen(); return; }
   for (const it of scr.tabs[scr.tab].items()) if (it.key && it.key in DEFAULTS) S[it.key] = DEFAULTS[it.key];
-  if (scr.tabs[scr.tab].label === 'Controls') { S.preset = 'classic'; Object.assign(S, PRESETS.classic.set); }
   saveSettings(); applySettingsSideEffects(); toast('<b>Reset</b> ' + scr.tabs[scr.tab].label + ' to default'); renderScreen();
 }
 function setSetting(k, v) {
   S[k] = v;
-  if (k === 'preset' && PRESETS[v]) Object.assign(S, PRESETS[v].set);
-  if (ASSIST_KEYS.includes(k)) { const p = PRESETS[S.preset]; if (!p || ASSIST_KEYS.some(a => p.set[a] !== S[a])) S.preset = 'custom'; }
   if (k === 'camPreset' && CAMS[v]) Object.assign(S, { fov: CAMS[v].fov, camDist: CAMS[v].camDist, camHeight: CAMS[v].camHeight });
   if (['fov', 'camDist', 'camHeight'].includes(k)) { const c = CAMS[S.camPreset]; if (!c || c.fov !== S.fov || c.camDist !== S.camDist || c.camHeight !== S.camHeight) S.camPreset = 'custom'; }
   saveSettings(); applySettingsSideEffects(k);
@@ -5775,8 +5765,6 @@ function settingsScreen() {
   const m = (v) => (v / 10).toFixed(1) + ' m';
   const tabs = [
     { label: 'Controls', items: () => [
-      { type: 'section', label: 'Control preset' },
-      { type: 'choice', key: 'preset', label: 'Preset', options: () => Object.entries(PRESETS).map(([k, p]) => [k, p.label]), customLabel: 'Custom', descF: () => (PRESETS[S.preset] || { desc: 'You changed an assist, so this is a custom setup. Pick a preset to go back to one.' }).desc },
       { type: 'section', label: 'Preferences' },
       { type: 'slider', key: 'flickSens', label: 'Flick-it sensitivity', min: 0, max: 100, step: 5, fmt: sens, desc: 'Higher means the stick loads and pops with less travel and a slower flick still pops high. Lower needs a full, snappy flick.' },
       { type: 'slider', key: 'deadzone', label: 'Left stick deadzone', min: 5, max: 30, step: 1, desc: 'Raise this if you drift or turn when you are not touching the stick.' },
@@ -5804,7 +5792,6 @@ function settingsScreen() {
       { type: 'choice', key: 'grabRelease', label: 'Landing while grabbing', options: opts('grabRelease'), desc: 'What happens if you are still holding a grab when you touch down.' },
       { type: 'choice', key: 'wallBails', label: 'Wall bails', options: opts('wallBails'), desc: 'Forgiving lets you hit walls, curbs and poles harder before you slam. Smaller hits make you stumble instead.' },
       { type: 'choice', key: 'bailReset', label: 'After a bail', options: opts('bailReset'), desc: 'Get up: your skater picks himself up where he landed, calls the board back and keeps going. Reset: jump straight back to your marker or the last safe spot.' },
-      { type: 'toggle', key: 'mongo', label: 'Separate mongo push', desc: 'On: X pushes with your back foot and A with your front foot. Off: both buttons push normally.' },
       { type: 'section', label: 'Screen' },
       { type: 'toggle', key: 'monitor', label: 'Flick-it monitor', desc: 'The stick ring in the top right that shows your flick path.' },
       { type: 'toggle', key: 'hints', label: 'Button hints', desc: 'Contextual button prompts in the bottom right.' },
@@ -5845,7 +5832,7 @@ function settingsScreen() {
     side: (it) => {
       if (!it) return '';
       let html = '<h3>' + escapeHtml(it.label) + '</h3>' + (it.descF ? '<p>' + it.descF() + '</p>' : it.desc ? '<p>' + it.desc + '</p>' : '');
-      if (tabs[curScreen().tab].label === 'Controls' && it.key === 'preset') html += padDiagram();
+      if (tabs[curScreen().tab].label === 'Controls' && it.key === 'flickSens') html += padDiagram();
       return html;
     }
   };
@@ -5856,12 +5843,12 @@ function setMarker() { P.marker = { x: P.pos.x, y: P.pos.y, z: P.pos.z, yaw: tra
 function mapping() {
   return [
     ['L', 'Steer · spin · grind balance'], ['R', 'Flick tricks · board adjust'],
-    ['X', (S.mongo ? 'Push (back foot)' : 'Push') + ' · off board: tap to sprint'], ['A', S.mongo ? 'Push (front foot, mongo)' : 'Push'],
+    ['A', 'Push · off board: tap to sprint'],
     ['B', 'Brake · exit grind · powerslide with L · off board: drop / grab board'], ['Y', 'Off / on board · call your board back'],
     ['LT', 'Grab (lead hand)'], ['RT', 'Grab (back hand)'], ['RB', 'Handplant at a coping'], ['LB', 'Gestures: hold, D-pad picks'],
     ['View', 'Map · hold for replay'], ['Menu', 'Pause'],
     ['Up', 'Session marker: tap to go, hold to set'], ['Down', 'Hold to restart at the roll-in'],
-    ['Left', 'Switch camera'], ['Right', 'Flick-it monitor on / off']
+    ['Right', 'Flick-it monitor on / off']
   ];
 }
 function padDiagram() {
@@ -5883,13 +5870,12 @@ function padDiagram() {
   return '<div class="paddiag">' + s + '<div class="maplist">' + rows + '</div></div>';
 }
 function controlsScreen() {
-  const padRows = () => [{ type: 'section', label: S.preset === 'custom' ? 'Custom layout' : (PRESETS[S.preset].label + ' layout') }]
-      .concat(mapping().map(([b, l]) => ({ label: l, value: glyph(b, inp.padStyle), type: 'info' })))
-      .concat([{ label: 'Change preset in Settings', run: () => openScreen(settingsScreen()) }]);
+  const padRows = () => [{ type: 'section', label: 'Controller layout' }]
+      .concat(mapping().map(([b, l]) => ({ label: l, value: glyph(b, inp.padStyle), type: 'info' })));
   const kbRows = () => [
     ['W / Space', 'Push · pump on transitions · lean at the lip'], ['A / D', 'Steer · spin · balance on grinds'], ['S', 'Brake · hop off a grind'], ['Shift', 'Powerslide'],
     ['Mouse drag or arrows', 'Flick tricks · board adjust'], ['C / V', 'Manual / nose manual (W and S to balance)'], ['Q / E or right mouse', 'Grabs'], ['G', 'Handplant'], ['F', 'Get off / on · call your board back'], ['S (off board)', 'Set the board down / pick it up'], ['W tapped (off board)', 'Sprint'], ['H', 'Gesture'],
-    ['Tab', 'Map (tap) · replay (hold)'], ['T', 'Session marker (tap go, hold set)'], ['Backspace (hold)', 'Restart at the roll-in'], ['[ / ]', 'Camera · flick-it monitor'], ['Esc', 'Pause']
+    ['Tab', 'Map (tap) · replay (hold)'], ['T', 'Session marker (tap go, hold set)'], ['Backspace (hold)', 'Restart at the roll-in'], [']', 'Flick-it monitor'], ['Esc', 'Pause']
   ].map(([k, l]) => ({ label: l, value: '<span class="g key">' + escapeHtml(k) + '</span>', type: 'info' }));
   return {
     id: 'controls', title: 'Controls',
@@ -6854,7 +6840,6 @@ function gameTick(dt) {
   if (up === 'tap') { if (P.marker && P.state !== 'bail') { loseLineQuiet(); respawn(P.marker); } else if (!P.marker) toast('No marker yet. Hold ' + glyph('Up') + ' while rolling to set one.'); }
   if (up === 'hold') { if (P.state === 'ground') setMarker(); else toast('Get on the ground to drop a marker'); }
   if (!lbEat && tapHold('Down', 0.8) === 'hold') { P.marker = null; loseLineQuiet(); respawn(SPAWN); toast('Back at the roll-in'); }
-  if (pad.down.has('Left') && !lbEat) { const k = Object.keys(CAMS), i = k.indexOf(S.camPreset); setSetting('camPreset', k[(i + 1) % k.length]); toast('<b>Camera</b> ' + CAMS[S.camPreset].label); }
   if (pad.down.has('Right') && !lbEat) { setSetting('monitor', !S.monitor); }
   if (pad.down.has('Y')) {
     if (P.state === 'ground') getOff();
