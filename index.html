@@ -765,74 +765,6 @@ function ledgeBox(cx, cz, yaw, L, W, H, opts = {}) {
   return sf;
 }
 const SPOTS = []; // named spots for the map: [name, x, z, y?, yaw?]
-function buildYard() {
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), M.floor);
-  floor.rotation.x = -Math.PI / 2; putMesh(floor);
-  const outer = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), M.dirt);
-  outer.rotation.x = -Math.PI / 2; outer.position.y = -0.02; putMesh(outer);
-  const fenceH = 2.4;
-  for (const [cx, cz, yaw] of [[0, -49, Math.PI / 2], [0, 49, Math.PI / 2], [-49, 0, 0], [49, 0, 0]]) {
-    addSurface({ type: 'box', ox: cx - Math.sin(yaw) * 50, oz: cz - Math.cos(yaw) * 50, yaw, L: 100, W: 1, H: fenceH, invisible: true, fence: true });
-    const f = new THREE.Mesh(new THREE.BoxGeometry(yaw ? 100 : 0.08, fenceH, yaw ? 0.08 : 100), M.fence);
-    f.position.set(cx, fenceH / 2, cz); putMesh(f);
-  }
-  // roll-in
-  addSurface({ type: 'box', ox: 0, oz: -48.5, yaw: 0, L: 6.5, W: 9, H: 3 });
-  addSurface({ type: 'ramp', ox: 0, oz: -32, yaw: Math.PI, L: 10, W: 9, h0: 0, h1: 3 });
-  SPOTS.push(['Roll-in', 0, -46, 3, 0]);
-  ledgeBox(-12, -6, 0, 18, 0.9, 0.45, { edge: M.paint }); SPOTS.push(['Long ledge', -12, -6]);
-  railWithPosts({ x: 5, y: 0.38, z: -18 }, { x: 5, y: 0.38, z: 0 }, M.red); SPOTS.push(['Flat bar', 5, -9]);
-  ledgeBox(-2, -20, 0, 6, 2.6, 0.24); SPOTS.push(['Manny pad', -2, -20]);
-  addSurface({ type: 'ramp', ox: -4, oz: 6, yaw: 0, L: 2.4, W: 3, h0: 0, h1: 0.75 }); SPOTS.push(['Kicker', -4, 7]);
-  // plaza
-  addSurface({ type: 'box', ox: 21, oz: -14, yaw: 0, L: 26, W: 16, H: 1.0, mat: M.ledge });
-  for (let i = 0; i < 4; i++) addSurface({ type: 'box', ox: 13 - (i + 1) * 1.1, oz: -2, yaw: Math.PI / 2, L: 1.1, W: 8, H: 0.8 - i * 0.2, mat: M.ramp });
-  railWithPosts({ x: 13.4, y: 1.86, z: -6.4 }, { x: 8.2, y: 0.8, z: -6.4 }, M.paint);
-  addSurface({ type: 'ramp', ox: 21, oz: 18, yaw: Math.PI, L: 6, W: 16, h0: 0, h1: 1.0 });
-  ledgeBox(23, 0, 0, 10, 0.7, 1.45, { edge: M.steel });
-  SPOTS.push(['Plaza + 4 stair', 21, -2]);
-  // funbox
-  addSurface({ type: 'ramp', ox: -22, oz: 14, yaw: 0, L: 2.6, W: 6, h0: 0, h1: 0.8 });
-  ledgeBox(-22, 18.6, 0, 4, 6, 0.8, { grind: false });
-  addRail({ x: -25, y: 0.8, z: 16.7 }, { x: -25, y: 0.8, z: 20.5 }, 'ledge', null);
-  addRail({ x: -19, y: 0.8, z: 16.7 }, { x: -19, y: 0.8, z: 20.5 }, 'ledge', null);
-  addSurface({ type: 'ramp', ox: -22, oz: 23.2, yaw: Math.PI, L: 2.6, W: 6, h0: 0, h1: 0.8 });
-  railWithPosts({ x: -22, y: 1.25, z: 15.4 }, { x: -22, y: 1.25, z: 21.8 }, M.red);
-  SPOTS.push(['Funbox', -22, 18.6]);
-  // mini halfpipe (wood)
-  addSurface({ type: 'qp', ox: 12, oz: 30, yaw: Math.PI, R: 3.0, W: 12, deck: 2.2, mat: M.wood });
-  addSurface({ type: 'qp', ox: 12, oz: 37, yaw: 0, R: 3.0, W: 12, deck: 2.2, mat: M.wood });
-  SPOTS.push(['Mini ramp', 12, 33.5]);
-  // big vert
-  addSurface({ type: 'qp', ox: -38, oz: -16, yaw: -Math.PI / 2, R: 3.8, W: 16, deck: 3, mat: M.wood });
-  SPOTS.push(['Vert wall', -40, -16]);
-  ledgeBox(30, 28, 0, 14, 0.5, 0.32, { edge: M.paint }); SPOTS.push(['Curb', 30, 28]);
-  for (const [x, z] of [[-30, -30], [30, -30], [-30, 30], [32, 40], [0, 20]]) {
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 8, 6), M.dark); p.position.set(x, 4, z); putMesh(p);
-    addPole(x, z, 0.13, 8);
-    const l = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.18, 0.4), M.dark); l.position.set(x, 8, z); putMesh(l);
-    put(box(0.8, 0.04, 0.32), A.lampHead, x, 7.88, z); LAMPS.push({ x, y: 7.85, z, g: 0, k: 1.6 });
-  }
-  const rnd = mulberry(7);
-  for (let i = 0; i < 9; i++) {
-    const a = -0.9 + i * 0.35, r = 85 + rnd() * 40, h = 22 + rnd() * 26;
-    const s = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, h, 10), M.stack);
-    s.position.set(Math.sin(a) * r, h / 2, Math.cos(a) * r); putMesh(s);
-    if (i % 3 === 0) for (let k = 0; k < 2; k++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.75, 2.2, 10), M.red); b.position.set(s.position.x, h - 2 - k * 5, s.position.z); putMesh(b); }
-  }
-  for (let i = 0; i < 6; i++) {
-    const a = 2.3 + i * 0.45, r = 75 + rnd() * 30;
-    const t = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 9 + rnd() * 6, 16), M.stack);
-    t.position.set(Math.sin(a) * r, 5, Math.cos(a) * r); putMesh(t);
-  }
-  for (let i = 0; i < 14; i++) {
-    const a = rnd() * TAU, r = 70 + rnd() * 70, w = 10 + rnd() * 18, h = 6 + rnd() * 14;
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w * (0.5 + rnd())), rnd() < 0.5 ? M.rust : M.dark);
-    b.position.set(Math.sin(a) * r, h / 2, Math.cos(a) * r); b.rotation.y = rnd() * 3; putMesh(b);
-  }
-  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 60, 10), M.rust);
-  pipe.rotation.z = Math.PI / 2; pipe.position.set(20, 3.5, 58); putMesh(pipe);
-}
 function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 /* =========================================================================
@@ -3139,7 +3071,10 @@ function stepGround(dt) {
     enterAir(null); P.air.rolled = true; // rolled off an edge: no auto-grinds on the way down
     return;
   }
-  P.vy = (h - P.pos.y) / dt;
+  // rolling up onto a curb, a plank or the side of a bank is a step, not a ramp: don't turn the jump in height into
+  // upward speed (at 120 ticks a second a 15 cm curb used to read as 18 m/s and fling you into the sky)
+  const rise = h - P.pos.y, ns = gx * dx + gz * dzz;
+  P.vy = rise > 0.03 && rise > Math.abs(step * Math.max(slope, ns)) + 0.03 ? P.s * ns / Math.sqrt(1 + ns * ns) : rise / dt;
   P.pos.set(nx, h, nz); P.surf = sf; P.gx = gx; P.gz = gz;
   if (sf && sf.hazard) return bail(sf.hazard);
   if (P.manual) stepManual(dt);
@@ -4569,7 +4504,7 @@ function buildHill() {
 
 /* ------------------------------ registry + loading ------------------------------ */
 const MAPS = {
-  yard: { name: 'Rustline Yard', blurb: 'The original industrial yard: roll-in, plaza, funbox, mini ramp and a vert wall.', build: () => { buildYard(); bounds(-49, -49, 49, 49); }, spawn: { x: 0, y: 3, z: -46, yaw: 0 }, bounds: [-52, -52, 52, 52], cam: { x: 2, z: -4, r: 24, h: 6.5 } },
+  yard: { name: 'Rustline Yard', blurb: 'An abandoned rail yard: a signal-box roll-in, three lines of track with boxcars and a skateable flatcar, an indoor shed with a mini ramp, a loading dock, a container gap, the turntable bowl and DIY under the viaduct.', build: buildRailYard, spawn: { x: 0, y: 3, z: -68, yaw: 0 }, bounds: [-86, -76, 86, 76], cam: { x: 0, z: -10, r: 70, h: 30 } },
   plaza: { name: 'Carver Plaza', blurb: 'Downtown. City Hall 7 with hubbas and rails, a fountain, granite ledges, curbs, a brick bank and a courthouse block.', build: buildPlaza, spawn: { x: -5, y: B0 + 1.68, z: 30, yaw: Math.PI }, bounds: [-56, -58, 58, 54], cam: { x: -5, z: 6, r: 30, h: 9 } },
   park: { name: 'Mosswood Skatepark', blurb: 'Poured concrete. A deep pool bowl with tile and coping, a kidney, a wooden vert ramp, a spine, rollers and a street section.', build: buildPark, spawn: { x: 2, y: 0, z: -42, yaw: -0.25 }, bounds: [-58, -62, 58, 58], cam: { x: -6, z: 4, r: 34, h: 10 } },
   school: { name: 'Westbrook High', blurb: 'An after-hours school. The Westbrook 8 with hubbas, ADA rails, a gap over the grass, a loading dock, courts and a parking lot.', build: buildSchool, spawn: { x: 0, y: 1.92, z: 24, yaw: Math.PI }, bounds: [-46, -62, 62, 52], cam: { x: 0, z: 0, r: 34, h: 10 } },
@@ -4746,6 +4681,510 @@ function buildCourse() {
   spot('Euro gap', 24, -33, 0, 0); spot('London gap', 44, -36, 0, 0); spot('The 3 / 5 / 8', -34, 4, 0.85, Math.PI);
   spot('Kinked rail', -5.5, 4, 1.44, Math.PI); spot('Mini ramp', 44, 8, 0, 0); spot('Pole jam', 32, 27, 0, 0); spot('Meridian 10', 0, 40, 1.7, Math.PI);
 }
+
+/* =========================================================================
+   RUSTLINE YARD — an abandoned rail yard, rebuilt as the game's first map.
+   Zones (north is the roll-in, you skate toward +z):
+     Signal Box roll-in · The Tracks (3 lines with boxcars, a tanker and a
+     skateable flatcar) · The Shed (indoor warehouse with a mini ramp, a
+     quarter and a street section) + its loading dock · Container Stacks
+     (ramp up, gap, bank down) · Turntable Bowl · Under the Viaduct (DIY
+     banks, quarter, barriers) · Water tower / tie-pile middle yard.
+   Everything here is procedural: textures are drawn on canvases at load.
+   ========================================================================= */
+
+/* ------------------------------ textures ------------------------------ */
+function rustStreaks(g, w, h, n, col) { // vertical runs of rust down a surface
+  for (let i = 0; i < n; i++) {
+    const x = Math.random() * w, y = Math.random() * h * 0.6, len = 20 + Math.random() * h * 0.5, ww = 2 + Math.random() * 7;
+    const gr = g.createLinearGradient(0, y, 0, y + len); gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(x, y, ww, len);
+  }
+}
+function crackPath(g, x, y, n, step, wdt, col) {
+  g.strokeStyle = col; g.lineWidth = wdt; g.lineCap = 'round'; g.beginPath(); g.moveTo(x, y);
+  let a = Math.random() * Math.PI * 2;
+  for (let k = 0; k < n; k++) { a += (Math.random() - 0.5) * 1.1; x += Math.cos(a) * step; y += Math.sin(a) * step; g.lineTo(x, y); if (Math.random() < 0.18) { g.stroke(); crackPath(g, x, y, n / 3 | 0, step * 0.7, wdt * 0.6, col); g.beginPath(); g.moveTo(x, y); } }
+  g.stroke();
+}
+const YT = {
+  // weathered slab concrete: four slabs per tile with joints, cracks, stains and the odd weed
+  slab: () => ctex('y_slab', 1024, 1024, (g, w, h) => {
+    g.fillStyle = '#8f8b82'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { const k = Math.random() * 16 - 8; g.fillStyle = 'rgba(' + (k > 0 ? '255,250,240,' : '30,28,24,') + Math.abs(k) / 100 + ')'; g.fillRect(i * w / 2, j * h / 2, w / 2, h / 2); }
+    noise(g, w, h, 60000, 0.12, 0.08, 2);
+    blotches(g, w, h, 40, 'rgba(60,52,40,.12)', 30, 140); blotches(g, w, h, 18, 'rgba(255,250,235,.07)', 40, 160);
+    blotches(g, w, h, 10, 'rgba(110,60,25,.10)', 20, 80);   // rust bleed
+    blotches(g, w, h, 6, 'rgba(15,15,15,.22)', 15, 60);     // oil
+    for (let i = 0; i < 9; i++) crackPath(g, Math.random() * w, Math.random() * h, 14, 14, 1.6, 'rgba(25,22,18,.55)');
+    g.strokeStyle = 'rgba(25,23,20,.65)'; g.lineWidth = 5; g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.moveTo(0, 0); g.lineTo(w, 0); g.moveTo(0, 0); g.lineTo(0, h); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 2; g.beginPath(); g.moveTo(w / 2 + 4, 0); g.lineTo(w / 2 + 4, h); g.moveTo(0, h / 2 + 4); g.lineTo(w, h / 2 + 4); g.stroke();
+    for (let i = 0; i < 70; i++) { // weeds in the joints
+      const onX = Math.random() < 0.5, t = Math.random() * w, jx = onX ? t : (Math.random() < 0.5 ? 0 : w / 2), jy = onX ? (Math.random() < 0.5 ? 0 : h / 2) : t;
+      for (let k = 0; k < 6; k++) { g.strokeStyle = 'hsla(' + (70 + Math.random() * 30) + ',40%,' + (22 + Math.random() * 18) + '%,.85)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(jx, jy); g.lineTo(jx + (Math.random() - 0.5) * 14, jy + (Math.random() - 0.5) * 14); g.stroke(); }
+    }
+  }),
+  // polished warehouse floor, darker and smoother
+  shedFloor: () => ctex('y_shedfloor', 512, 512, (g, w, h) => {
+    g.fillStyle = '#6f6c66'; g.fillRect(0, 0, w, h); noise(g, w, h, 16000, 0.07, 0.05, 2);
+    g.strokeStyle = 'rgba(255,255,255,.035)'; g.lineWidth = 10;
+    for (let i = 0; i < 30; i++) { g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 40 + Math.random() * 80, 0, Math.PI * (0.4 + Math.random())); g.stroke(); }
+    blotches(g, w, h, 12, 'rgba(15,15,15,.16)', 20, 70);
+    g.strokeStyle = 'rgba(20,20,20,.5)'; g.lineWidth = 3; g.strokeRect(0, 0, w, h);
+    g.fillStyle = 'rgba(230,190,40,.55)'; g.fillRect(0, h * 0.48, w, 6); // faded forklift lane paint
+  }),
+  // track ballast: crushed stone with rust dust
+  ballast: () => ctex('y_ballast', 512, 512, (g, w, h) => {
+    g.fillStyle = '#6b665d'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 9000; i++) { const l = 25 + Math.random() * 40, r = 2 + Math.random() * 5; g.fillStyle = 'hsl(' + (25 + Math.random() * 20) + ',' + (5 + Math.random() * 12) + '%,' + l + '%)'; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, r, r * (0.6 + Math.random() * 0.4), Math.random() * 3, 0, 7); g.fill(); }
+    blotches(g, w, h, 20, 'rgba(110,55,20,.18)', 20, 70); blotches(g, w, h, 10, 'rgba(10,10,10,.2)', 20, 60);
+  }),
+  // creosote railroad ties
+  tie: () => ctex('y_tie', 256, 64, (g, w, h) => {
+    g.fillStyle = '#3d3128'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 26; i++) { g.strokeStyle = 'rgba(15,10,6,' + (0.2 + Math.random() * 0.4) + ')'; g.lineWidth = 1 + Math.random() * 2; const y = Math.random() * h; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(w * 0.3, y + 3, w * 0.6, y - 3, w, y + Math.random() * 4 - 2); g.stroke(); }
+    for (let i = 0; i < 5; i++) { g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 2; const x = Math.random() * w; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 20 + Math.random() * 40, h * Math.random()); g.stroke(); }
+    noise(g, w, h, 1200, 0.2, 0.06, 2);
+  }),
+  // corrugated sheet metal with faded paint and rust runs; bright = paint colour
+  corrugated: (paint) => ctex('y_corr' + paint, 512, 512, (g, w, h) => {
+    g.fillStyle = paint; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 16) { const gr = g.createLinearGradient(x, 0, x + 16, 0); gr.addColorStop(0, 'rgba(0,0,0,.28)'); gr.addColorStop(0.45, 'rgba(255,255,255,.14)'); gr.addColorStop(1, 'rgba(0,0,0,.28)'); g.fillStyle = gr; g.fillRect(x, 0, 16, h); }
+    noise(g, w, h, 12000, 0.1, 0.05, 2);
+    rustStreaks(g, w, h, 60, 'rgba(120,55,20,.55)'); blotches(g, w, h, 18, 'rgba(110,50,18,.35)', 15, 70);
+    blotches(g, w, h, 10, 'rgba(255,255,255,.08)', 40, 120);
+    g.fillStyle = 'rgba(30,25,20,.5)'; g.fillRect(0, h - 3, w, 3); g.fillRect(0, h / 2 - 1, w, 2); // panel seams
+    for (let x = 8; x < w; x += 32) for (const y of [8, h / 2 + 6, h - 10]) { g.fillStyle = 'rgba(20,20,20,.6)'; g.fillRect(x, y, 3, 3); } // screws
+  }),
+  // a shipping container side: deep ribs, a stencilled code, dents and rust
+  container: (paint, code) => ctex('y_cont' + paint, 1024, 256, (g, w, h) => {
+    g.fillStyle = paint; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 24) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(x, 10, 5, h - 20); g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + 12, 10, 4, h - 20); }
+    g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, 0, w, 10); g.fillRect(0, h - 10, w, 10);
+    noise(g, w, h, 14000, 0.12, 0.06, 2); rustStreaks(g, w, h, 40, 'rgba(110,50,18,.5)');
+    blotches(g, w, h, 16, 'rgba(100,45,15,.35)', 10, 50); blotches(g, w, h, 8, 'rgba(0,0,0,.15)', 30, 90);
+    g.save(); g.font = '900 34px "Arial Black", Impact, sans-serif'; g.fillStyle = 'rgba(245,242,232,.85)'; g.textBaseline = 'top';
+    g.fillText(code, w * 0.32, 26); g.font = '700 18px "Arial", sans-serif'; g.fillText('MAX GR 30480 KG  ·  TARE 2200 KG', w * 0.32, 66); g.restore();
+  }),
+  // boxcar side: rust-red planking ribs, a sliding door outline and reporting marks
+  boxcar: (paint, mark) => ctex('y_boxcar' + paint + mark, 1024, 256, (g, w, h) => {
+    g.fillStyle = paint; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 40) { g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x, 0, 4, h); g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(x + 4, 0, 3, h); }
+    noise(g, w, h, 14000, 0.14, 0.05, 2); rustStreaks(g, w, h, 70, 'rgba(70,30,10,.55)'); blotches(g, w, h, 20, 'rgba(60,25,8,.4)', 10, 60);
+    const dx = w * 0.4, dw = w * 0.2; // sliding door
+    g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(dx, 8, dw, h - 16); g.strokeStyle = 'rgba(20,10,5,.8)'; g.lineWidth = 6; g.strokeRect(dx, 8, dw, h - 16);
+    g.fillStyle = 'rgba(30,20,15,.9)'; g.fillRect(dx - 10, 4, dw + 20, 8); g.fillRect(dx - 10, h - 14, dw + 20, 8);
+    for (let k = 0; k < 4; k++) g.fillRect(dx + dw * 0.5 - 4, 30 + k * 50, 8, 18);
+    g.font = '900 30px "Arial Black", Impact, sans-serif'; g.fillStyle = 'rgba(240,236,222,.8)'; g.textBaseline = 'top'; g.fillText(mark, 30, 30);
+    g.font = '700 16px Arial, sans-serif'; g.fillText('CAPY 100000  LD LMT 132000  LT WT 45000', 30, 70); g.fillText('BLT 3-71', w - 140, h - 40);
+  }),
+  // weathered grey DIY plywood / planks
+  oldWood: () => ctex('y_oldwood', 256, 256, (g, w, h) => {
+    g.fillStyle = '#8c8170'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 32) { g.fillStyle = shade('#8c8170', Math.random() * 30 - 15); g.fillRect(0, y + 1, w, 30); g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, y, w, 2); }
+    for (let i = 0; i < 60; i++) { g.strokeStyle = 'rgba(40,32,22,' + (0.12 + Math.random() * 0.2) + ')'; g.lineWidth = 1; const y = Math.random() * h; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(w / 3, y + 2, w * 2 / 3, y - 2, w, y); g.stroke(); }
+    noise(g, w, h, 2500, 0.15, 0.08, 2); blotches(g, w, h, 6, 'rgba(30,25,20,.25)', 10, 40);
+    for (let y = 0; y < h; y += 32) for (const x of [12, w - 14]) { g.fillStyle = '#2a2a2a'; g.fillRect(x, y + 14, 3, 3); }
+  }),
+  // stained poured concrete for walls, pillars and DIY banks
+  wallCrete: () => ctex('y_wallcrete', 512, 512, (g, w, h) => {
+    g.fillStyle = '#a29e94'; g.fillRect(0, 0, w, h); noise(g, w, h, 20000, 0.1, 0.07, 2);
+    for (let y = 0; y < h; y += 128) { g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(0, y, w, 2); } // form lines
+    for (let x = 0; x < w; x += 128) for (let y = 64; y < h; y += 128) { g.fillStyle = 'rgba(30,30,30,.35)'; g.beginPath(); g.arc(x + 64, y, 4, 0, 7); g.fill(); } // form-tie holes
+    rustStreaks(g, w, h, 18, 'rgba(60,45,30,.35)'); rustStreaks(g, w, h, 30, 'rgba(20,20,20,.25)'); // water stains
+    blotches(g, w, h, 20, 'rgba(70,80,40,.10)', 20, 80);
+    for (let i = 0; i < 5; i++) crackPath(g, Math.random() * w, Math.random() * h, 10, 12, 1.2, 'rgba(30,28,24,.5)');
+  }),
+  // a few bricks for the signal box and roundhouse, soot-darkened
+  sootBrick: () => ctex('y_sootbrick', 512, 512, (g, w, h) => {
+    const bt = T.brick('#7d3a28').image; for (let x = 0; x < w; x += 256) for (let y = 0; y < h; y += 256) g.drawImage(bt, x, y);
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(15,12,10,.45)'); gr.addColorStop(0.5, 'rgba(15,12,10,.1)'); gr.addColorStop(1, 'rgba(15,12,10,.25)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    blotches(g, w, h, 12, 'rgba(230,225,210,.10)', 20, 60); // efflorescence
+  }),
+  hazard: () => ctex('y_hazard', 128, 32, (g, w, h) => {
+    g.fillStyle = '#f2c230'; g.fillRect(0, 0, w, h); g.fillStyle = '#16171a';
+    for (let x = -h; x < w; x += 32) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + 16, h); g.lineTo(x + 16 + h, 0); g.lineTo(x + h, 0); g.fill(); }
+    noise(g, w, h, 600, 0.25, 0.1, 2); blotches(g, w, h, 4, 'rgba(60,40,20,.3)', 6, 20);
+  }),
+  roof: () => ctex('y_roof', 256, 256, (g, w, h) => {
+    g.fillStyle = '#5f5a52'; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 16) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(x, 0, 3, h); g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(x + 8, 0, 3, h); }
+    blotches(g, w, h, 14, 'rgba(110,50,15,.4)', 10, 50); noise(g, w, h, 3000, 0.15, 0.05, 2);
+  }),
+  // soft-edged decals (alpha only): oil stain, puddle, crack web, weed tuft
+  oil: () => ctex('y_oil', 256, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    for (let i = 0; i < 7; i++) { const x = w / 2 + (Math.random() - 0.5) * w * 0.4, y = h / 2 + (Math.random() - 0.5) * h * 0.4, r = 30 + Math.random() * 70; const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(10,10,12,.55)'); gr.addColorStop(0.7, 'rgba(10,10,12,.25)'); gr.addColorStop(1, 'rgba(10,10,12,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+  }),
+  puddle: () => ctex('y_puddle', 256, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h); g.fillStyle = '#fff';
+    g.beginPath(); for (let i = 0; i <= 24; i++) { const a = i / 24 * Math.PI * 2, r = 80 + Math.sin(a * 3 + 1) * 18 + Math.sin(a * 5) * 12 + Math.random() * 6; i ? g.lineTo(128 + Math.cos(a) * r, 128 + Math.sin(a) * r * 0.7) : g.moveTo(128 + Math.cos(a) * r, 128 + Math.sin(a) * r * 0.7); } g.fill();
+  }),
+  dirtPatch: () => ctex('y_dirt', 256, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    for (let i = 0; i < 9; i++) { const x = w / 2 + (Math.random() - 0.5) * w * 0.35, y = h / 2 + (Math.random() - 0.5) * h * 0.35, r = 50 + Math.random() * 60; const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(92,76,58,.55)'); gr.addColorStop(1, 'rgba(92,76,58,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+    g.globalCompositeOperation = 'source-atop'; for (let i = 0; i < 3000; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(40,32,24,.5)' : 'rgba(160,140,110,.35)'; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); } g.globalCompositeOperation = 'source-over';
+  }),
+  cracks: () => ctex('y_cracks', 256, 256, (g, w, h) => { g.clearRect(0, 0, w, h); for (let i = 0; i < 3; i++) crackPath(g, w / 2, h / 2, 12, 12, 2.2, 'rgba(18,16,14,.75)'); }),
+  weeds: () => ctex('y_weeds', 128, 128, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    for (let i = 0; i < 60; i++) { const x = w / 2 + (Math.random() - 0.5) * w * 0.8, top = h * (0.1 + Math.random() * 0.5); g.strokeStyle = 'hsl(' + (60 + Math.random() * 40) + ',' + (30 + Math.random() * 25) + '%,' + (20 + Math.random() * 25) + '%)'; g.lineWidth = 1.5 + Math.random() * 2; g.beginPath(); g.moveTo(w / 2 + (Math.random() - 0.5) * 14, h); g.quadraticCurveTo(x, h * 0.7, x + (Math.random() - 0.5) * 20, top); g.stroke(); }
+  }),
+  barbed: () => ctex('y_barbed', 256, 32, (g, w, h) => { g.clearRect(0, 0, w, h); g.strokeStyle = '#8a8f94'; g.lineWidth = 2; for (const y of [8, 16, 24]) { g.beginPath(); for (let x = 0; x <= w; x += 8) g.lineTo(x, y + Math.sin(x * 0.4) * 2); g.stroke(); } for (let x = 6; x < w; x += 24) for (const y of [8, 16, 24]) { g.beginPath(); g.moveTo(x - 4, y - 4); g.lineTo(x + 4, y + 4); g.moveTo(x + 4, y - 4); g.lineTo(x - 4, y + 4); g.stroke(); } }),
+  stencil: (text, fg, bg) => ctex('y_sten' + text + fg + bg, 1024, 160, (g, w, h) => {
+    g.fillStyle = bg; g.fillRect(0, 0, w, h); noise(g, w, h, 6000, 0.15, 0.08, 2); rustStreaks(g, w, h, 25, 'rgba(100,45,15,.5)');
+    g.font = '900 112px Impact, "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = fg; g.globalAlpha = 0.9; g.fillText(text, w / 2, h / 2 + 4); g.globalAlpha = 1;
+    noise(g, w, h, 5000, 0.2, 0.05, 3);
+  })
+};
+// materials (bump maps reuse the colour canvas for a bit of surface relief at max detail)
+function ylam(key, map, tile, o = {}) { return lam('Y' + key, { map, bumpMap: o.bump === false ? null : map, bumpScale: o.bumpScale || 1.2, ...o.extra }, tile); }
+const YM = {
+  get slab() { return ylam('slab', YT.slab(), 8, { bumpScale: 0.9 }); },
+  get shedFloor() { return ylam('shedfloor', YT.shedFloor(), 6, { bump: false }); },
+  get ballast() { return ylam('ballast', YT.ballast(), 2.4, { bumpScale: 3 }); },
+  get tie() { return ylam('tie', YT.tie(), [2.6, 0.6], { bumpScale: 1.5 }); },
+  get corrGreen() { return ylam('corrG', YT.corrugated('#56685c'), [6, 6], { bumpScale: 2.5 }); },
+  get corrRust() { return ylam('corrR', YT.corrugated('#8a4b2c'), [6, 6], { bumpScale: 2.5 }); },
+  get corrGrey() { return ylam('corrY', YT.corrugated('#8d8f8c'), [6, 6], { bumpScale: 2.5 }); },
+  get oldWood() { return ylam('oldwood', YT.oldWood(), 2.4, { bumpScale: 1.5 }); },
+  get poured() { return ylam('poured', T.parkcrete(), 5, { extra: { color: 0xc4beb2 }, bumpScale: 0.8 }); },
+  get wallCrete() { return ylam('wallcrete', YT.wallCrete(), 6, { bumpScale: 1 }); },
+  get sootBrick() { return ylam('sootbrick', YT.sootBrick(), 6, { bumpScale: 1.4 }); },
+  get hazard() { return ylam('hazard', YT.hazard(), [1.6, 0.4], { bump: false }); },
+  get roof() { return ylam('roof', YT.roof(), 4, { bumpScale: 2 }); },
+  get rustSteel() { return lam('Yrust', { map: T.metalPlate(), color: 0x8a5236 }, 1.2); },
+  get railSteel() { return pal('#9a9894', true); },
+  get railWeb() { return pal('#5a3a26'); },
+  get darkSteel() { return pal('#2d2f32'); },
+  get girder() { return pal('#3f4a52'); },
+  get rubber() { return pal('#191919'); },
+  get skylight() { const m = phong('Yskylight', { color: 0xbfd3dc, emissive: 0x6d7c84, shininess: 60, transparent: true, opacity: 0.55, side: THREE.DoubleSide }); m.userData.noShadow = true; m.userData.tile = 0; return m; },
+  get oil() { const m = AMAT.Yoil || (AMAT.Yoil = new THREE.MeshBasicMaterial({ map: YT.oil(), transparent: true, depthWrite: false, ...decalOpts })); m.userData.noShadow = true; m.userData.tile = 0; return m; },
+  get cracks() { const m = AMAT.Ycracks || (AMAT.Ycracks = new THREE.MeshBasicMaterial({ map: YT.cracks(), transparent: true, depthWrite: false, ...decalOpts })); m.userData.noShadow = true; m.userData.tile = 0; return m; },
+  get dirtPatch() { const m = AMAT.Ydirtp || (AMAT.Ydirtp = new THREE.MeshLambertMaterial({ map: YT.dirtPatch(), transparent: true, depthWrite: false, ...decalOpts })); m.userData.noShadow = true; m.userData.tile = 0; return m; },
+  get grime() { const m = AMAT.Ygrime || (AMAT.Ygrime = new THREE.MeshBasicMaterial({ map: YT.oil(), transparent: true, opacity: 0.45, depthWrite: false, ...decalOpts })); m.userData.noShadow = true; m.userData.tile = 0; return m; },
+  get puddle() { // dark, glossy water that picks up the sky and the sun
+    if (AMAT.Ypuddle) return AMAT.Ypuddle;
+    const m = AMAT.Ypuddle = new THREE.MeshPhongMaterial({ color: 0x23292d, specular: 0x6f7c84, shininess: 70, alphaMap: YT.puddle(), transparent: true, opacity: 0.72, depthWrite: false, ...decalOpts });
+    m.userData.noShadow = true; m.userData.tile = 0; return m;
+  },
+  get weeds() { const m = lam('Yweeds', { map: YT.weeds(), transparent: true, alphaTest: 0.35, side: THREE.DoubleSide }); m.userData.noShadow = true; m.userData.tile = 0; return m; },
+  get barbed() { const m = lam('Ybarbed', { map: YT.barbed(), transparent: true, alphaTest: 0.3, side: THREE.DoubleSide }); m.userData.noShadow = true; m.userData.tile = 0; return m; },
+  get fireGlow() { return pal('#ff8a2a', 'glow'); },
+  get signalRed() { return pal('#e0301e', 'glow'); },
+  get signalGreen() { return pal('#3fd06a', 'glow'); }
+};
+const CONT_COLS = [['#a6402c', 'RSTU 482719 4'], ['#2f5f8a', 'VTKU 300155 2'], ['#3f6b3a', 'STZU 771042 8'], ['#c08a2a', 'KEVU 118833 0'], ['#6d6f72', 'GRDU 650921 3'], ['#7a2f4a', 'NOLU 902117 6']];
+const contMat = (i) => { const [c, code] = CONT_COLS[i % CONT_COLS.length]; return ylam('cont' + i, YT.container(c, code), [12.2, 2.6], { bumpScale: 2 }); };
+const boxcarMat = (i) => { const p = [['#7a3020', 'RSTL 30247'], ['#5b3a2a', 'VRTK 81100'], ['#3d4a52', 'STZ 4419']][i % 3]; return ylam('boxcar' + i, YT.boxcar(p[0], p[1]), [14, 3.1], { bumpScale: 1.6 }); };
+
+/* ------------------------------ yard props ------------------------------ */
+const YARD = { tracks: [] };
+function ydecal(x, z, s, mat, y = 0, ry) { put(plane(s, s), mat, x, y + 0.014, z, ry === undefined ? R_() * TAU : ry, { uv: false, uvFn: (g) => { const uv = g.attributes.uv, p = g.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, p.getX(i) / s + 0.5, -p.getZ(i) / s + 0.5); } }); }
+function weedTuft(x, z, s = 1, y0 = 0) { const a = R_() * 3; for (const k of [0, Math.PI / 2]) put(new THREE.PlaneGeometry(0.9 * s, 0.6 * s).translate(0, 0.3 * s, 0), YM.weeds, x, y0, z, a + k, { uv: false, uvFn: (g) => { const uv = g.attributes.uv, p = g.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, p.getX(i) / (0.9 * s) + 0.5, p.getY(i) / (0.6 * s)); } }); }
+// a stretch of track along x at z: ballast, ties, two grindable rails
+function track(x0, x1, z) {
+  YARD.tracks.push({ x0, x1, z });
+  put(plane(x1 - x0, 3.6), YM.ballast, (x0 + x1) / 2, 0.012, z, 0, { worldUV: true });
+  for (const s of [-1, 1]) put(plane(x1 - x0, 0.6), YM.ballast, (x0 + x1) / 2, 0.006, z + s * 2.05, 0, { worldUV: true, tile: 1.8 });
+  for (let x = x0 + 0.3; x < x1; x += 0.62) put(box(0.24, 0.1, 2.6), YM.tie, x + rr(-0.03, 0.03), 0.0, z, rr(-0.03, 0.03), { tile: [2.6, 0.6] });
+  for (const s of [-0.72, 0.72]) {
+    put(box(x1 - x0, 0.12, 0.08), YM.railWeb, (x0 + x1) / 2, 0.05, z + s, 0);
+    put(box(x1 - x0, 0.035, 0.075), YM.railSteel, (x0 + x1) / 2, 0.165, z + s, 0);
+    addRail({ x: x0 + 0.2, y: 0.2, z: z + s }, { x: x1 - 0.2, y: 0.2, z: z + s }, 'rail', null);
+  }
+  for (const xe of [x0, x1]) { // end-of-track bumper stops
+    const d = xe === x0 ? 1 : -1;
+    put(box(2.8, 1.1, 0.5), pal('#c2a23a'), xe + d * 0.3, 0.2, z, Math.PI / 2); put(box(2.9, 0.25, 0.55), YM.hazard, xe + d * 0.3, 1.3, z, Math.PI / 2, { tile: [1.6, 0.4] });
+    colBox(xe + d * 0.3, z, 2.9, 0.6, 1.55, Math.PI / 2);
+  }
+}
+function wheelset(x, z, y = 0) { for (const s of [-0.72, 0.72]) put(new THREE.CylinderGeometry(0.42, 0.42, 0.12, 14).rotateX(Math.PI / 2), YM.darkSteel, x, y + 0.42, z + s, 0, { uv: false }); put(new THREE.CylinderGeometry(0.07, 0.07, 1.6, 6).rotateX(Math.PI / 2), YM.darkSteel, x, y + 0.42, z, 0, { uv: false }); }
+function bogie(x, z) { wheelset(x - 0.9, z); wheelset(x + 0.9, z); put(box(2.7, 0.35, 2.4), YM.darkSteel, x, 0.55, z); put(box(0.4, 0.5, 2.6), pal('#4b3a2c'), x, 0.25, z); }
+function boxcar(cx, z, L, i, o = {}) { // body along x
+  bogie(cx - L / 2 + 2.2, z); bogie(cx + L / 2 - 2.2, z);
+  put(box(L + 0.6, 0.35, 2.9), YM.darkSteel, cx, 0.95, z, 0);
+  put(box(L, 3.05, 3.0), boxcarMat(i), cx, 1.3, z, 0, { tile: [L, 3.1] });
+  const roof = new THREE.CylinderGeometry(1.6, 1.6, L, 10, 1, true, Math.PI / 2 - 0.62, 1.24).rotateZ(Math.PI / 2).translate(0, -1.32, 0); put(roof, YM.rustSteel, cx, 4.35, z, 0, { uv: false });
+  put(box(L, 0.05, 0.5), YM.oldWood, cx, 4.62, z, 0); // roof walk
+  for (const e of [-1, 1]) { // ends: ladders, brake wheel, couplers
+    put(box(0.25, 0.25, 0.7), YM.darkSteel, cx + e * (L / 2 + 0.45), 0.9, z, Math.PI / 2);
+    for (let k = 0; k < 7; k++) put(box(0.04, 0.04, 0.6), A.galv, cx + e * (L / 2 + 0.04), 1.5 + k * 0.42, z + 1.1, 0);
+    put(new THREE.TorusGeometry(0.28, 0.03, 5, 14), YM.darkSteel, cx + e * (L / 2 + 0.05), 3.6, z - 0.6, Math.PI / 2, { uv: false });
+  }
+  if (o.open) { put(box(2.8, 2.6, 0.02), pal('#141210'), cx, 1.5, z - 1.51, 0); put(box(2.9, 2.7, 0.06), boxcarMat(i), cx + 2.9, 1.45, z - 1.58, 0, { tile: [14, 3.1] }); }
+  for (let k = 0; k < (o.tags || 2); k++) { const s = R_() < 0.5 ? -1 : 1; tag(cx + rr(-L / 2 + 2.5, L / 2 - 2.5), rr(1.9, 3), z + s * 1.53, rr(2.4, 3.6), s > 0 ? 0 : Math.PI); }
+  colBox(cx, z, 3.1, L + 1.2, 4.6, Math.PI / 2);
+}
+function flatcar(cx, z, L) { // a skateable deck at 1.25 m, both long edges grind
+  bogie(cx - L / 2 + 2.2, z); bogie(cx + L / 2 - 2.2, z);
+  put(box(L, 0.45, 2.9), YM.rustSteel, cx, 0.75, z, 0);
+  put(box(L - 0.1, 0.06, 2.8), YM.oldWood, cx, 1.19, z, 0, { tile: 2.4 });
+  for (let x = cx - L / 2 + 1; x < cx + L / 2; x += 1.6) for (const s of [-1, 1]) put(box(0.12, 0.08, 0.14), YM.darkSteel, x, 1.15, z + s * 1.42); // stake pockets
+  const sf = block(cx, z, 2.9, L, 1.25, null, Math.PI / 2, { invisible: true });
+  for (const s of [-1, 1]) { const [ax, az] = toWorld(sf, 0.1, s * 1.42), [bx, bz] = toWorld(sf, L - 0.1, s * 1.42); addRail({ x: ax, y: 1.25, z: az }, { x: bx, y: 1.25, z: bz }, 'ledge', null); put(box(L, 0.06, 0.06), A.galv, cx, 1.2, z + s * 1.42, 0); }
+  return sf;
+}
+function tankcar(cx, z, L) {
+  bogie(cx - L / 2 + 2, z); bogie(cx + L / 2 - 2, z);
+  put(box(L, 0.3, 2.4), YM.darkSteel, cx, 0.95, z, 0);
+  put(new THREE.CylinderGeometry(1.45, 1.45, L - 1, 18).rotateZ(Math.PI / 2), lam('Ytank', { map: YT.corrugated('#24272b'), color: 0x999999 }, [6, 6]), cx, 2.7, z, 0, { uv: false });
+  for (const e of [-1, 1]) put(new THREE.SphereGeometry(1.45, 14, 8, 0, TAU, 0, Math.PI / 2).rotateZ(-e * Math.PI / 2), pal('#24272b'), cx + e * (L / 2 - 0.5), 2.7, z, 0, { uv: false });
+  put(cyl(0.6, 0.6, 0.5, 12), pal('#24272b'), cx, 4.05, z); put(box(L * 0.5, 0.05, 1.2), A.galv, cx, 4.2, z, 0);
+  signBoard('tankhaz', 'NON-FLAMMABLE', '#e8e2cf', '#1d1d1d', cx, 2.7, z - 1.47, 3.2, 0.55, Math.PI);
+  tag(cx + 3, 2.4, z + 1.47, 3.4, 0);
+  colBox(cx, z, 3.0, L + 0.6, 4.3, Math.PI / 2);
+}
+// a shipping container (12.2 x 2.44 x 2.6) along yaw; level 0 sits on the ground
+function container(cx, cz, yaw, level, ci, o = {}) {
+  const y = level * 2.6;
+  put(box(2.44, 2.6, 12.2), contMat(ci), cx, y, cz, yaw, { tile: [12.2, 2.6] });
+  for (const e of [-1, 1]) for (const s of [-1, 1]) put(box(0.2, 2.62, 0.2), YM.darkSteel, cx + Math.sin(yaw) * e * 6.0 + Math.cos(yaw) * s * 1.13, y, cz + Math.cos(yaw) * e * 6.0 - Math.sin(yaw) * s * 1.13); // corner posts
+  if (o.doors) for (const s of [-1, 1]) for (let k = 0; k < 2; k++) put(cyl(0.03, 0.03, 2.4, 5), A.galv, cx + Math.sin(yaw) * 6.11 + Math.cos(yaw) * (s * 0.3 + k * 0.6 * s), y + 0.1, cz + Math.cos(yaw) * 6.11 - Math.sin(yaw) * (s * 0.3 + k * 0.6 * s));
+  if (o.tag) tag(cx + Math.cos(yaw) * 1.23 * o.tag, y + rr(0.9, 1.6), cz - Math.sin(yaw) * 1.23 * o.tag, rr(2.6, 3.6), yaw + (o.tag > 0 ? Math.PI / 2 : -Math.PI / 2));
+}
+// a stack of containers that you can't get on top of (wall) — or a rideable deck if o.deck
+function contStack(cx, cz, yaw, n, ci, o = {}) {
+  for (let k = 0; k < n; k++) container(cx, cz, yaw, k, ci + k * 2, { tag: k === 0 && R_() < 0.6 ? (R_() < 0.5 ? 1 : -1) : 0, doors: k === 0 });
+  const sf = colBox(cx, cz, 2.44, 12.2, n * 2.6, yaw);
+  if (o.deck) { // grind the top edges
+    for (const s of o.edges || [-1, 1]) { const [ax, az] = toWorld(sf, 0.1, s * 1.2), [bx, bz] = toWorld(sf, 12.1, s * 1.2); addRail({ x: ax, y: n * 2.6, z: az }, { x: bx, y: n * 2.6, z: bz }, 'ledge', null); }
+  }
+  return sf;
+}
+function barrel(x, z, col, y0 = 0, tipped) {
+  const m = pal(col || pick(['#2a4b7a', '#8a3a22', '#3f5a3a', '#6b6d70', '#a8852c']));
+  if (tipped) { put(new THREE.CylinderGeometry(0.29, 0.29, 0.88, 12).rotateZ(Math.PI / 2), m, x, y0 + 0.29, z, R_() * 3, { uv: false }); return; }
+  put(cyl(0.29, 0.29, 0.88, 12), m, x, y0, z); for (const h of [0.28, 0.6]) put(cyl(0.3, 0.3, 0.04, 12), YM.darkSteel, x, y0 + h, z);
+  addPole(x, z, 0.3, y0 + 0.88, y0);
+}
+function fireBarrel(x, z) { barrel(x, z, '#3a2a20'); put(new THREE.ConeGeometry(0.22, 0.5, 7).translate(0, 0.25, 0), YM.fireGlow, x, 0.86, z); LAMPS.push({ x, y: 1.4, z, g: 0, k: 0.6 }); }
+function pallet(x, z, yaw, y0 = 0) { for (const s of [-0.45, 0, 0.45]) put(box(1.2, 0.1, 0.1), YM.oldWood, x + Math.cos(yaw) * 0 + Math.sin(yaw) * s, y0, z + Math.cos(yaw) * s, yaw + Math.PI / 2); for (let k = -2; k <= 2; k++) put(box(0.14, 0.03, 1.2), YM.oldWood, x + Math.cos(yaw) * k * 0.25, y0 + 0.1, z - Math.sin(yaw) * k * 0.25, yaw); }
+function palletStack(x, z, n, yaw = 0) { for (let k = 0; k < n; k++) pallet(x + rr(-0.05, 0.05), z + rr(-0.05, 0.05), yaw + rr(-0.08, 0.08), k * 0.14); colBox(x, z, 1.2, 1.2, n * 0.14, yaw); }
+function tireStack(x, z, n) { for (let k = 0; k < n; k++) put(new THREE.TorusGeometry(0.33, 0.13, 8, 14).rotateX(Math.PI / 2), YM.rubber, x + rr(-0.05, 0.05), 0.13 + k * 0.24, z + rr(-0.05, 0.05), 0, { uv: false }); addPole(x, z, 0.45, n * 0.24, 0); }
+function spool(x, z) { const g = new THREE.CylinderGeometry(0.75, 0.75, 0.08, 16).rotateX(Math.PI / 2); for (const s of [-0.4, 0.4]) put(g.clone(), YM.oldWood, x, 0.75, z + s, 0, { uv: false }); put(new THREE.CylinderGeometry(0.35, 0.35, 0.8, 12).rotateX(Math.PI / 2), pal('#6a4a2a'), x, 0.75, z, 0, { uv: false }); addPole(x, z, 0.8, 1.5, 0); }
+function scrapPile(x, z, r) {
+  for (let i = 0; i < 14; i++) { const a = R_() * TAU, d = R_() * r; put(box(rr(0.3, 1.6), rr(0.1, 0.6), rr(0.3, 2.2)), pick([YM.rustSteel, YM.darkSteel, YM.corrRust, YM.oldWood]), x + Math.cos(a) * d, rr(0, r * 0.25), z + Math.sin(a) * d, R_() * 3, { rx: rr(-0.4, 0.4), rz: rr(-0.4, 0.4) }); }
+  put(new THREE.ConeGeometry(r, r * 0.55, 8), pal('#4a3a2c'), x, r * 0.27, z, R_() * 3, { uv: false });
+}
+function crateStack(x, z, n) { for (let k = 0; k < n; k++) put(box(1, 1, 1), YM.oldWood, x + rr(-0.1, 0.1), k, z + rr(-0.1, 0.1), rr(-0.2, 0.2), { tile: 1 }); colBox(x, z, 1.1, 1.1, n, 0); }
+function relayBox(x, z, yaw) { put(box(0.9, 1.5, 0.6), pal('#8c9296'), x, 0.1, z, yaw); put(box(1.0, 0.1, 0.7), pal('#6c7276'), x, 1.6, z, yaw); put(box(1.0, 0.1, 0.7), A.sidewalk, x, 0, z, yaw); colBox(x, z, 0.9, 0.6, 1.7, yaw); }
+function switchStand(x, z) { put(box(0.3, 0.8, 0.3), YM.darkSteel, x, 0, z); put(box(0.5, 0.35, 0.05), pal('#d8c23a'), x, 0.95, z, 0.4); put(cyl(0.025, 0.025, 1.1, 5), YM.darkSteel, x + 0.2, 0.5, z, 0, { rz: 0.6 }); addPole(x, z, 0.2, 1.1, 0); }
+function signalMast(x, z, yaw, aspect) {
+  put(cyl(0.1, 0.12, 6, 8), YM.girder, x, 0, z); put(box(0.7, 2.0, 0.45), YM.darkSteel, x, 4.2, z, yaw);
+  [YM.signalRed, pal('#d9a62a', 'glow'), YM.signalGreen].forEach((m, i) => put(new THREE.CircleGeometry(0.12, 10), i === aspect ? m : pal('#1c1c1c'), x + Math.sin(yaw) * 0.24, 5.85 - i * 0.55, z + Math.cos(yaw) * 0.24, yaw, { uv: false }));
+  for (let k = 0; k < 10; k++) put(box(0.4, 0.03, 0.03), A.galv, x - Math.sin(yaw) * 0.15, 0.4 + k * 0.4, z - Math.cos(yaw) * 0.15, yaw);
+  addPole(x, z, 0.16, 6.2, 0);
+}
+function floodTower(x, z, yaw, h = 14) { floodLight(x, z, yaw, h); for (let k = 0; k < Math.floor(h / 0.5); k++) put(box(0.36, 0.03, 0.03), A.galv, x, 0.6 + k * 0.5, z + 0.22); }
+function hangLamp(x, y, z) { put(cyl(0.015, 0.015, 1.2, 4), YM.darkSteel, x, y, z); put(new THREE.ConeGeometry(0.42, 0.32, 12, 1, true).translate(0, -0.16, 0), pal('#2f4a3a'), x, y, z, 0, { uv: false }); put(new THREE.CircleGeometry(0.34, 12).rotateX(Math.PI / 2), A.lampHead, x, y - 0.3, z, 0, { uv: false }); LAMPS.push({ x, y: y - 0.32, z, g: 0, k: 1.1 }); }
+function chainFence(ax, az, bx, bz, h = 3) {
+  fenceLine(ax, az, bx, bz, h);
+  const len = Math.hypot(bx - ax, bz - az), yaw = Math.atan2(bx - ax, bz - az);
+  put(new THREE.PlaneGeometry(len, 0.35).rotateY(Math.PI / 2).rotateX(0), YM.barbed, (ax + bx) / 2, h + 0.25, (az + bz) / 2, yaw, { uv: false, uvFn: (g) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * len / 2.5); } });
+}
+
+/* ------------------------------ the map ------------------------------ */
+function buildRailYard() {
+  YARD.tracks.length = 0;
+  // ground: weathered slabs inside the fence, dirt and scrub beyond it
+  patch(-86, -76, 86, 76, YM.slab, 0);
+  const outer = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), M.dirt);
+  outer.rotation.x = -Math.PI / 2; outer.position.y = -0.03; putMesh(outer);
+  patch(34, -16, 84, 50, A.asphalt, 0.004); // container yard is old asphalt
+
+  /* ---- 1. Signal Box roll-in (north) ---- */
+  block(0, -69, 14, 10, 3.0, YM.poured);                         // freight platform
+  slope(0, -54, Math.PI, 10, 9, 0, 3.0, YM.poured);                 // roll-in down toward the tracks
+  spot('Signal box roll-in', 0, -68, 3, 0);
+    for (const s of [-1, 1]) railWithPosts({ x: s * 6.8, y: 4.0, z: -73.6 }, { x: s * 6.8, y: 4.0, z: -64.4 }, A.galv);
+  put(box(14.2, 0.12, 0.25), YM.hazard, 0, 2.9, -64.1, 0, { tile: [1.6, 0.4] });
+  // the signal box: brick ground floor, glazed operating floor above
+  put(box(8, 3.2, 6), YM.sootBrick, -12, 0, -70, 0); put(box(8.4, 2.6, 6.4), facadeMat('ysigbox', { wall: '#3b4a42', bays: 4, floors: 1, winW: 0.8, winH: 0.65, winY: 0.15, frame: '#d9d3c2', lit: 0.6 }), -12, 3.2, -70, 0);
+  const sroof = new THREE.Shape(); sroof.moveTo(-4.6, 0); sroof.lineTo(4.6, 0); sroof.lineTo(0, 1.6);
+  put(new THREE.ExtrudeGeometry(sroof, { depth: 7, bevelEnabled: false }).translate(0, 0, -3.5), A.shingles, -12, 5.8, -70, 0);
+  signBoard('rustline', 'RUSTLINE YARD', '#1d2b25', '#e9e2c8', -12, 2.2, -66.97, 6.4, 1.1, 0);
+  colBox(-12, -70, 8.4, 6.4, 7.4);
+  put(box(3, 2.4, 0.15), YM.oldWood, -7.3, 0, -66, 0.6); // boarded door leaned against it
+
+  /* ---- 2. The Tracks: three lines across the yard ---- */
+  const TZ = [-41, -34.5, -28];
+  for (const z of TZ) track(-80, 80, z);
+  flatcar(-22, TZ[0], 14); spot('Flatcar', -22, TZ[0], 1.25, Math.PI / 2);
+  slope(-36, TZ[0], Math.PI / 2, 7, 2.6, 0, 1.25, YM.oldWood);      // DIY plank ramp up onto the flatcar
+  slope(-10, TZ[0], -Math.PI / 2, 5, 2.6, 0, 1.25, YM.oldWood);       // and a bank back down off the far end
+  boxcar(33, TZ[0], 14, 0, { open: true, tags: 3 });
+  tankcar(18, TZ[1], 12);
+  boxcar(-55, TZ[2], 14, 1, { tags: 3 });
+  boxcar(52, TZ[2], 14, 2, { tags: 2 });
+  boxcar(-62, TZ[1], 14, 0, { tags: 1 });
+  spot('The tracks', 0, TZ[1], 0, 0);
+  // a wooden grade crossing on the roll-in line
+  for (const z of TZ) block(0, z, 7, 3.0, 0.18, YM.oldWood);
+  for (const z of TZ) for (const s of [-1, 1]) switchStand(s * 5.5, z + 2.6);
+  // a signal gantry over all three lines
+  for (const z of [-45.5, -23.5]) { put(box(0.5, 7.2, 0.5), YM.girder, 12, 0, z); addPole(12, z, 0.35, 7.2, 0); }
+  put(box(0.6, 0.6, 22.6), YM.girder, 12, 7.2, -34.5, 0);
+  for (const z of TZ) { put(box(0.7, 1.5, 0.45), YM.darkSteel, 12, 5.6, z, Math.PI); put(new THREE.CircleGeometry(0.13, 10), z === TZ[1] ? YM.signalGreen : YM.signalRed, 12 - 0.24, 6.0, z, -Math.PI / 2, { uv: false }); }
+  signalMast(-46, -45.5, Math.PI / 2, 0); signalMast(46, -23.5, -Math.PI / 2, 2);
+  for (const [x, z] of [[-30, -45.8], [28, -45.8], [-8, -23.2], [58, -45.8]]) relayBox(x, z, 0);
+  // catenary-style poles along the line
+  for (let x = -72; x <= 72; x += 24) { if (Math.abs(x) < 8) continue; put(cyl(0.14, 0.18, 8, 8), YM.girder, x, 0, -47); put(box(0.15, 0.15, 3), YM.girder, x, 7.6, -45.6, 0); addPole(x, -47, 0.2, 8, 0); }
+
+  /* ---- 3. The Shed (indoor warehouse) + loading dock ---- */
+  const SX0 = -76, SX1 = -40, SZ0 = -12, SZ1 = 20, SH = 8.5, WT = 0.35;
+  patch(SX0, SZ0, SX1, SZ1, YM.shedFloor, 0.006);
+  const wall = (ax, az, bx, bz, mat) => { const sf = wallLine(ax, az, bx, bz, SH, mat, WT, 0, { fence: true }); return sf; };
+  const lintel = (ax, az, bx, bz, mat, y0) => { const len = Math.hypot(bx - ax, bz - az), yaw = Math.atan2(bx - ax, bz - az); put(box(WT, SH - y0, len), mat, (ax + bx) / 2, y0, (az + bz) / 2, yaw); };
+  // west & north walls solid, east wall has two roller-door openings onto the dock, south wall one big door toward the tracks
+  wall(SX0, SZ0, SX0, SZ1, YM.corrGreen); wall(SX0, SZ1, SX1, SZ1, YM.corrGreen);
+  wall(SX1, SZ0, SX1, -6, YM.corrGreen); lintel(SX1, -6, SX1, 2, YM.corrGreen, 5); wall(SX1, 2, SX1, 6, YM.corrGreen); lintel(SX1, 6, SX1, 14, YM.corrGreen, 5); wall(SX1, 14, SX1, SZ1, YM.corrGreen);
+  wall(SX0, SZ0, -66, SZ0, YM.corrGreen); lintel(-66, SZ0, -54, SZ0, YM.corrGreen, 5.5); wall(-54, SZ0, SX1, SZ0, YM.corrGreen);
+  for (const [x0, x1, z, y] of [[SX1, SX1, -2, 5], [SX1, SX1, 10, 5]]) { put(box(0.6, 0.6, 8.2), YM.hazard, x0 + 0.1, y - 0.1, z, 0, { tile: [1.6, 0.4] }); }
+  put(box(12.2, 0.6, 0.6), YM.hazard, -60, 5.4, SZ0, 0, { tile: [1.6, 0.4] });
+  signBoard('shed', 'SHED 3', '#e8e0c4', '#1c2a22', -58, 7.0, SZ0 - 0.2, 5, 1.0, Math.PI);
+  tag(SX0 - 0.2, 2.4, 4, 5, -Math.PI / 2); tag(-70, 2.2, SZ0 - 0.2, 4.4, Math.PI); tag(-47, 2.0, SZ0 - 0.2, 3.8, Math.PI);
+  // roof: corrugated with skylight strips, steel trusses underneath
+  for (let z = SZ0; z < SZ1; z += 8) {
+    put(box(SX1 - SX0 + 0.6, 0.12, 5.6), YM.roof, (SX0 + SX1) / 2, SH, z + 2.8, 0, { tile: 4 });
+    put(box(SX1 - SX0 + 0.6, 0.06, 2.4), YM.skylight, (SX0 + SX1) / 2, SH + 0.04, z + 6.8, 0);
+  }
+  for (let x = SX0 + 6; x < SX1; x += 6) { put(box(0.25, 0.5, SZ1 - SZ0), YM.girder, x, SH - 0.62, (SZ0 + SZ1) / 2, 0); for (let z = SZ0 + 2; z < SZ1; z += 4) put(box(0.08, 1.1, 0.08), YM.girder, x, SH - 1.6, z, 0, { rx: 0.5 }); }
+  for (let x = SX0 + 4.5; x < SX1 - 1; x += 9) for (let z = SZ0 + 5; z < SZ1 - 1; z += 10.5) hangLamp(x, SH - 0.8, z);
+  // inside: a wooden mini ramp across the west end...
+  addSurface({ type: 'qp', ox: -66.5, oz: 0, yaw: -Math.PI / 2, R: 2.4, W: 10, deck: 1.8, mat: M.wood });
+  addSurface({ type: 'qp', ox: -59.5, oz: 0, yaw: Math.PI / 2, R: 2.4, W: 10, deck: 1.8, mat: M.wood });
+  for (const x of [-70.5, -55.5]) put(box(0.08, 1.0, 10), A.galv, x, 1.9, 0, 0); // deck railings behind the copings
+  spot('Shed mini ramp', -63, 0, 0, Math.PI / 2);
+  // ...a quarter pipe on the north wall, and a street section by the doors
+  addSurface({ type: 'qp', ox: -63, oz: 15.6, yaw: 0, R: 2.2, W: 12, deck: 0.9, mat: M.wood });
+  ledgeBox(-44.5, 4, 0, 7, 2.4, 0.32, { mat: YM.tie, edge: A.galv, ends: true });                    // railroad-tie manual pad
+  railWithPosts({ x: -55, y: 0.42, z: 11 }, { x: -44, y: 0.42, z: 11 }, YM.railSteel, { r: 0.03 }); // an old rail on posts
+  { const c = -52.5, z = 4.5; slope(c - 4.4, z, Math.PI / 2, 2.4, 3, 0, 0.6, M.wood); ledgeBox(c, z, Math.PI / 2, 4, 3, 0.6, { mat: M.wood, edge: A.galv }); slope(c + 4.4, z, -Math.PI / 2, 2.4, 3, 0, 0.6, M.wood); } // funbox
+  spot('The Shed', -52, 6, 0, -Math.PI / 2);
+  for (let i = 0; i < 4; i++) palletStack(-74.6, -10 + i * 1.6, 2 + (i % 3));
+  crateStack(-74.5, 18.5, 2); crateStack(-73.3, 18.6, 1); barrel(-41.5, 18.6); barrel(-42.3, 18.4, '#8a3a22');
+  for (let k = 0; k < 7; k++) ydecal(rr(-72, -44), rr(-10, 18), rr(1, 2.6), YM.oil, 0.006);
+  // loading dock along the east face: grind the edge, drop off it, ramp up the south end, stairs at the north
+  ledgeBox(-37.5, 4, 0, 32, 5, 1.2, { mat: YM.poured, edge: A.galv, sides: [-1] });
+  put(box(0.14, 0.18, 32), YM.hazard, -35.07, 1.04, 4, 0, { tile: [1.6, 0.4] });
+  for (let z = -10; z <= 18; z += 4) put(box(0.25, 0.5, 0.6), YM.rubber, -34.9, 0.45, z, 0); // dock bumpers
+  slope(-37.5, -20, 0, 8, 5, 0, 1.2, YM.poured);                    // ramp up from the tracks side
+  const dst = stairs(-37.5, 20.1, 0, 5, 4, 0.3, 0.42, 0, YM.poured); stairRail(-37.5, 20.1, 0, dst, 1.9, 0, A.galv);
+  for (const z of [-8, 4, 16]) lampPost(-35.6, z, -Math.PI / 2, 5.5, 1.2);
+  spot('Loading dock', -37, -4, 1.2, 0);
+  // a semi trailer backed up to the dock
+  put(box(2.6, 2.9, 13), contMat(4), -29.5, 1.25, 12, 0, { tile: [12.2, 2.6] }); put(box(2.4, 0.3, 13), YM.darkSteel, -29.5, 0.95, 12, 0);
+  for (const z of [16.5, 17.8]) for (const s of [-1, 1]) put(new THREE.CylinderGeometry(0.5, 0.5, 0.3, 14).rotateZ(Math.PI / 2), A.tire, -29.5 + s * 1.05, 0.5, z, 0, { uv: false });
+  for (const s of [-1, 1]) put(box(0.12, 1.0, 0.12), YM.darkSteel, -29.5 + s * 1, 0, 7, 0);
+  tag(-28.18, 2.4, 13, 4.2, Math.PI / 2);
+  colBox(-29.5, 12, 2.7, 13.2, 4.2);
+
+  /* ---- 4. Container Stacks (east): ramp up, gap, bank down ---- */
+  slope(44.4, -10, 0, 24, 6.5, 0, 2.6, YM.poured);                  // long gentle ramp up to the deck
+  for (const s of [-1, 1]) railWithPosts({ x: 44.4 + s * 3.4, y: 0.9, z: -9.4 }, { x: 44.4 + s * 3.4, y: 3.5, z: 13.6 }, A.galv);
+  const deckX = [42, 44.44, 46.88];
+  deckX.forEach((x, i) => contStack(x, 20.1, 0, 1, i, { deck: true, edges: i === 0 ? [1] : i === 2 ? [-1] : [] }));
+  deckX.forEach((x, i) => contStack(x, 35.8, 0, 1, i + 3, { deck: true, edges: i === 0 ? [1] : i === 2 ? [-1] : [] }));
+  slope(44.44, 49.0, Math.PI, 7.1, 7.3, 0, 2.6, YM.poured);          // bank back down
+  spot('Container gap', 44.4, 27.9, 2.6, 0);
+  // walls of stacked containers making a canyon to the east
+  const rows = [[56, -8, 0, 2], [56, 8, 0, 3], [56, 24, 0, 2], [56, 40, 0, 1], [62, -8, 0, 3], [62, 8, 0, 2], [62, 24, 0, 3], [70, -2, 0, 2], [70, 14, 0, 3], [70, 30, 0, 2], [78, 6, 0, 3], [78, 22, 0, 3], [78, -10, 0, 2]];
+  rows.forEach(([x, z, yaw, n], i) => contStack(x, z, yaw, n, i));
+  container(66, 44, 0.12, 0, 2, { tag: 1, doors: true }); colBox(66, 44, 2.44, 12.2, 2.6, 0.12);
+  // a rubber-tyred gantry crane straddling the canyon
+  for (const [x, z] of [[52.5, 2], [65.5, 2], [52.5, 16], [65.5, 16]]) { put(box(0.9, 13, 0.9), pal('#d8a22a'), x, 0, z); addPole(x, z, 0.6, 13, 0); put(box(1.4, 1.0, 2.2), YM.rubber, x, 0, z); }
+  for (const z of [2, 16]) put(box(14, 1.2, 1.2), pal('#d8a22a'), 59, 13, z, 0);
+  put(box(1.2, 1.2, 15.2), pal('#d8a22a'), 52.5, 13, 9); put(box(1.2, 1.2, 15.2), pal('#d8a22a'), 65.5, 13, 9);
+  put(box(3, 2.2, 3), pal('#3a3d40'), 59, 11.2, 9); signBoard('crane', 'RTG 04', '#d8a22a', '#1d1d1d', 59, 13.6, 1.38, 3, 0.8, Math.PI);
+  for (let i = 0; i < 6; i++) ydecal(rr(36, 50), rr(-14, 48), rr(1.2, 3), YM.oil, 0.004);
+  palletStack(38, 30, 3); palletStack(38.2, 31.4, 2); tireStack(37.5, 40, 4); tireStack(38.6, 41, 3); spool(50.5, -12);
+
+  /* ---- 5. Turntable bowl (south-west) with the old roundhouse behind ---- */
+  bowl(-48, 46, 8, 8, 2.6, 1.4, YM.poured, { coping: A.galv });
+  put(new THREE.RingGeometry(4.4, 4.9, 40).rotateX(-Math.PI / 2), YM.railSteel, -48, 0.012, 46, 0, { uv: false }); // the old turntable's ring rail, still in the bowl floor
+  slope(-48, 29.0, 0, 9.0, 15.9, 0, 2.06, YM.poured);   // bank up from the shed side
+  slope(-31.0, 46, -Math.PI / 2, 9.0, 15.9, 0, 2.06, YM.poured);     // and from the east
+  for (let a = 0; a < 8; a++) { const ang = Math.PI * 0.75 + a * 0.12, r0 = 9, r1 = 22; put(box(1.6, 0.03, r1 - r0), YM.ballast, -48 + Math.cos(ang) * (r0 + r1) / 2, 0.01, 46 + Math.sin(ang) * (r0 + r1) / 2, Math.atan2(Math.cos(ang), Math.sin(ang)), { tile: 2.4 }); }
+  spot('Turntable bowl', -48, 46, 0, 0);
+  // roundhouse: a long brick shed with arched stall doors facing the turntable
+  put(box(18, 9, 34), YM.sootBrick, -73, 0, 47, 0); put(box(18.6, 0.5, 34.6), A.darkTrim, -73, 9, 47, 0);
+  for (let z = 33; z <= 61; z += 7) { put(box(0.1, 6, 4.6), pal('#14120f'), -63.95, 0, z, 0); put(new THREE.CylinderGeometry(2.3, 2.3, 0.12, 14, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2), pal('#14120f'), -63.95, 6, z, Math.PI / 2, { uv: false }); }
+  for (let z = 33; z <= 61; z += 7) put(box(0.12, 0.5, 5.2), YM.sootBrick, -63.9, 8.2, z, 0);
+  for (const z of [32, 47, 62]) { put(cyl(0.6, 0.7, 4, 10), YM.sootBrick, -76, 9, z); }
+  tag(-63.85, 2.0, 37, 4.2, Math.PI / 2); tag(-63.85, 2.4, 51, 4.8, Math.PI / 2);
+  colBox(-73, 47, 18, 34, 10);
+
+  /* ---- 6. Under the Viaduct (south): DIY concrete ---- */
+  const VZ = 68.5;
+  for (let x = -24; x <= 84; x += 18) for (const z of [VZ - 2, VZ + 2]) { put(box(1.4, 7.4, 1.4), YM.wallCrete, x, 0, z); colBox(x, z, 1.4, 1.4, 7.4); }
+  put(box(110, 1.4, 9), YM.wallCrete, 30, 7.4, VZ, 0, { tile: 6 });
+  for (const s of [-1, 1]) put(box(110, 1.1, 0.3), YM.wallCrete, 30, 8.8, VZ + s * 4.35, 0);
+  put(box(110, 0.5, 0.3), pal('#2e2b26'), 30, 6.95, VZ - 4.4, 0);
+  signBoard('viaduct', 'CLEARANCE 7.2 M', '#e8e0c4', '#1d1d1d', 6, 6.6, VZ - 4.7, 4, 0.6, Math.PI);
+  for (let x = -24; x <= 84; x += 18) tag(x, 3.4, VZ - 2.72, 3.4, Math.PI);
+  // the DIY: a bank into a ledge against the abutment, a quarter, barriers, a pole jam, a hip
+  wallLine(-10, 65, 40, 65, 4, YM.wallCrete, 0.6, 0, { fence: true });
+  slope(4, 56.5, 0, 5.4, 16, 0, 2.2, YM.poured); ledgeBox(4, 63.25, Math.PI / 2, 16, 2.1, 2.2, { mat: YM.poured, edge: A.galv, sides: [-1] });
+  addSurface({ type: 'qp', ox: 28, oz: 60.2, yaw: 0, R: 2.4, W: 10, deck: 1.4, mat: YM.poured, copingMat: YM.railSteel });
+  for (let i = 0; i < 4; i++) ledgeBox(-6 + i * 3.4, 51, Math.PI / 2, 3.2, 0.55, 0.82, { mat: A.concreteWall, edge: false, ends: false }); // jersey barriers
+  railWithPosts({ x: 20, y: 0.48, z: 50 }, { x: 34, y: 0.48, z: 50 }, YM.railWeb, { r: 0.045 });   // a rusty pipe rail
+  slope(35, 55, Math.PI / 2, 2.8, 2.6, 0, 0.95, YM.oldWood); put(cyl(0.05, 0.05, 1.6, 6), A.galv, 40, 0, 55, 0, { rz: 0.9 }); addPole(40.4, 55, 0.08, 0.9, 0); // DIY kicker + pole jam
+  { const hx = 16, hz = 54; slope(hx - 3.8, hz, Math.PI / 2, 3.8, 3.2, 0, 1.1, YM.poured); slope(hx + 3.8, hz, -Math.PI / 2, 3.8, 3.2, 0, 1.1, YM.poured); } // hip
+  fireBarrel(14, 62.6); fireBarrel(-8, 60.5);
+  put(box(2.0, 0.45, 0.85), pal('#5a3a5a'), 37, 0, 63.2, 0.2); put(box(2.0, 0.7, 0.25), pal('#4a2f4a'), 37, 0.45, 63.6, 0.2); colBox(37, 63.3, 0.9, 2.0, 1.1, Math.PI / 2 + 0.2); // a dumped couch
+  spot('Under the viaduct', 14, 56, 0, Math.PI);
+
+  /* ---- 7. Middle yard: water tower, tie pile, ledges, rail on blocks ---- */
+  { const wx = 16, wz = 22; // water tower landmark
+    for (const [dx, dz] of [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]]) { put(box(0.35, 13, 0.35), YM.girder, wx + dx, 0, wz + dz, 0, { rx: -dz * 0.012, rz: dx * 0.012 }); addPole(wx + dx, wz + dz, 0.3, 13, 0); }
+    for (const y of [4, 8.5]) for (const [a, b, c, d] of [[-2.2, -2.2, 2.2, -2.2], [2.2, -2.2, 2.2, 2.2], [2.2, 2.2, -2.2, 2.2], [-2.2, 2.2, -2.2, -2.2]]) { const len = Math.hypot(c - a, d - b); put(box(0.08, 0.08, len), YM.girder, wx + (a + c) / 2, y, wz + (b + d) / 2, Math.atan2(c - a, d - b)); }
+    put(cyl(3.4, 3.4, 5.2, 20), lam('Ywtank', { map: YT.stencil('RUSTLINE', '#e9e2c8', '#6a3a26'), color: 0xffffff }, 0), wx, 13, wz, 0, { uv: false, uvFn: (g) => { const p = g.attributes.position, uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, Math.atan2(p.getX(i), p.getZ(i)) / Math.PI + 0.5, p.getY(i) / 5.2); } });
+    put(new THREE.ConeGeometry(3.7, 1.8, 20).translate(0, 0.9, 0), pal('#4a2d22'), wx, 18.2, wz, 0, { uv: false });
+    put(box(0.5, 13, 0.06), A.galv, wx + 3.5, 0, wz, Math.PI / 2);
+    put(new THREE.CylinderGeometry(0.25, 0.25, 4, 8).rotateZ(0.9), YM.darkSteel, wx - 4.6, 11.5, wz, 0, { uv: false }); // spout
+    spot('Water tower', wx, wz - 6, 0, 0); }
+  ledgeBox(-6, 6, Math.PI / 2, 14, 1.6, 0.52, { mat: YM.poured, edge: A.galv, ends: true });    // freight ledges
+  ledgeBox(-6, 12, Math.PI / 2, 14, 1.6, 0.4, { mat: YM.poured, edge: A.galv, ends: true });
+  { const z = -12, x0 = -24, x1 = -6; for (let x = x0 + 1; x < x1; x += 2.4) { put(box(0.3, 0.26, 2.0), YM.tie, x, 0, z, 0, { tile: [2.6, 0.6] }); } // rail spiked onto ties on blocks
+    put(box(x1 - x0, 0.14, 0.08), YM.railWeb, (x0 + x1) / 2, 0.26, z, 0); put(box(x1 - x0, 0.04, 0.08), YM.railSteel, (x0 + x1) / 2, 0.4, z, 0);
+    addRail({ x: x0, y: 0.44, z }, { x: x1, y: 0.44, z }, 'rail', null); spot('Rail on ties', (x0 + x1) / 2, z + 3, 0, 0); }
+  ledgeBox(26, -4, 0, 6, 2.8, 0.7, { mat: YM.tie, edge: false, ends: true });                    // a pile of old ties: grind box
+  for (let k = 0; k < 5; k++) put(box(2.7, 0.2, 0.25), YM.tie, 26 + rr(-0.1, 0.1), 0.72, -6.6 + k * 1.1 + rr(-0.1, 0.1), rr(-0.15, 0.15));
+  slope(26, -9.6, 0, 2.6, 3, 0, 0.7, YM.oldWood);                          // plank kicker into it
+  slope(-20, 22, Math.PI / 2, 2.4, 3.2, 0, 0.75, YM.oldWood); slope(-12.4, 22, -Math.PI / 2, 2.4, 3.2, 0, 0.75, YM.oldWood); // kicker to kicker gap
+  spot('Kicker gap', -16.2, 22, 0, Math.PI / 2);
+  spool(4, 30); spool(5.6, 31.2); crateStack(-26, 32, 2); barrel(-24.5, 33.5); barrel(-24.9, 34.3, '#8a3a22'); barrel(-23.8, 34.4, null, 0, false);
+  barrel(30, 10, null, 0, true); barrel(31, 11.2, '#2a4b7a');
+
+  /* ---- perimeter: chain-link with barbed wire, gate by the signal box, lights ---- */
+  chainFence(-84, -74, 84, -74); chainFence(84, -74, 84, 74); chainFence(84, 74, -84, 74); chainFence(-84, 74, -84, -74);
+  signBoard('notres', 'NO TRESPASSING · RAILROAD PROPERTY', '#e8e2cf', '#a52a1a', 20, 2.1, -73.85, 6, 0.6, 0);
+  for (const [x, z, yaw] of [[-30, -52, 0.6], [30, -52, -0.6], [6, 9, Math.PI], [36, 4, -Math.PI / 2], [-28, 30, 0.5], [-20, 56, 2.6], [70, 50, 2.6], [-80, -20, Math.PI / 2], [-56, -50, 0.4]]) floodTower(x, z, yaw);
+  // far scenery: smokestacks, tanks, the city skyline
+  const rnd = mulberry(11);
+  for (let i = 0; i < 9; i++) { const a = -0.9 + i * 0.35, r = 100 + rnd() * 30, h = 24 + rnd() * 28; put(cyl(1.6, 2.4, h, 10), pal('#7b7871'), Math.sin(a) * r, 0, Math.cos(a) * r, 0, { far: true, uv: false }); if (i % 3 === 0) put(cyl(1.75, 1.75, 2.2, 10), A.redPaint, Math.sin(a) * r, h - 3, Math.cos(a) * r, 0, { far: true, uv: false }); }
+  for (let i = 0; i < 6; i++) { const a = 2.3 + i * 0.45, r = 98 + rnd() * 20; put(cyl(8, 8, 10 + rnd() * 6, 18), pal('#8c8a84'), Math.sin(a) * r, 0, Math.cos(a) * r, 0, { far: true, uv: false }); }
+  skyline(0, 0, 104, 132, 34, [facadeMat('yfar3', { wall: '#6d6a63', bays: 8, floors: 3, winW: 0.3, winH: 0.35, lit: 0.12 }), facadeMat('yfar2', { wall: '#8c7a6a', brick: true, bays: 6, floors: 3, lit: 0.2 })], 7, 16);  // low factories all round
+  skyline(0, 0, 165, 200, 14, [facadeMat('yfar1', { wall: '#7a7f86', bays: 6, floors: 8, lit: 0.3 }), facadeMat('yfar4', { wall: '#5d6670', curtain: true, bays: 5, floors: 10, lit: 0.35 })], 30, 70, -0.5, 0.9); // the city, off to one side
+  scrapPile(-78, -62, 5); scrapPile(-70, 68, 4); scrapPile(78, -64, 4.5); scrapPile(80, 66, 4);
+
+  /* ---- grime pass: puddles, oil, cracks and weeds scattered on open ground ---- */
+  const open = (x, z) => sampleGround(x, z, 0.05).h < 0.03 && !(Math.abs(x) < 82 && YARD.tracks.some(t => Math.abs(z - t.z) < 2.2));
+  for (let i = 0; i < 46; i++) { const x = rr(-80, 80), z = rr(-70, 70); if (open(x, z)) ydecal(x, z, rr(1.6, 4.2), YM.puddle, 0.002); }
+  for (let i = 0; i < 40; i++) { const x = rr(-82, 82), z = rr(-72, 72); if (open(x, z)) ydecal(x, z, rr(6, 14), YM.grime, -0.004); }
+  for (let i = 0; i < 26; i++) { const x = rr(-82, 82), z = rr(-72, 72); if (open(x, z)) ydecal(x, z, rr(5, 12), YM.dirtPatch, -0.002); }
+  for (let i = 0; i < 60; i++) { const x = rr(-80, 80), z = rr(-70, 70); if (open(x, z)) ydecal(x, z, rr(1.2, 3.4), YM.oil); }
+  for (let i = 0; i < 70; i++) { const x = rr(-80, 80), z = rr(-70, 70); if (open(x, z)) ydecal(x, z, rr(2, 5), YM.cracks); }
+  for (let i = 0; i < 200; i++) { const x = rr(-83, 83), z = rr(-73, 73); if (open(x, z)) weedTuft(x, z, rr(0.6, 1.3)); }
+  for (const t of YARD.tracks) for (let i = 0; i < 40; i++) weedTuft(rr(t.x0, t.x1), t.z + (R_() < 0.5 ? -1 : 1) * rr(1.9, 2.3), rr(0.5, 1.1)); // weeds along the ballast
+  for (let i = 0; i < 60; i++) { const s = R_() * 4 | 0, t = rr(-82, 82); weedTuft(s === 0 ? t : s === 1 ? t : s === 2 ? -83.3 : 83.3, s === 0 ? -73.3 : s === 1 ? 73.3 : t * 0.88, rr(0.8, 1.6)); } // and along the fence
+
+  bounds(-84, -74, 84, 74);
+}
+// the spot menu keeps a screenshot of each map: drop the old Rustline Yard ones once, so the new yard shows
+try { if (store.get('yardV', 0) !== 2) { for (const t of ['day', 'golden', 'sunset', 'night']) store.set('prev_yard_' + t, null); store.set('yardV', 2); } } catch (e) { }
 
 /* =========================================================================
    SCORING — tricks chain into a line; the multiplier grows with each trick,
