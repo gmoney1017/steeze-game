@@ -247,6 +247,24 @@ body.menublur #view { filter: blur(9px) brightness(.7) saturate(1.15); transform
 #touchui .tb.on { background: var(--curb); color: #111; border-color: var(--curb); }
 #tbMenu { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); font-size: 20px !important; min-width: 48px !important; padding: 0 !important; }
 #tbMusic { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(max(12px, env(safe-area-inset-right, 0px)) + 58px); font-size: 20px !important; min-width: 48px !important; padding: 0 !important; }
+#tbChat { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(max(12px, env(safe-area-inset-right, 0px)) + 116px); font-size: 18px !important; min-width: 48px !important; padding: 0 !important; }
+#tbChat.new { border-color: var(--curb) !important; box-shadow: 0 0 0 3px rgba(245,197,24,.35); }
+#chatfeed { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); top: 34%; z-index: 5; display: grid; gap: 4px; max-width: min(360px, 62vw); pointer-events: none; }
+#chatfeed div { background: rgba(14,15,17,.62); color: var(--chalk); font: 500 13px var(--ui); padding: 5px 10px; border-radius: 8px; overflow-wrap: anywhere; text-shadow: none; }
+#chatfeed b { color: var(--curb); margin-right: 4px; }
+#typer { position: fixed; inset: 0; z-index: 90; background: rgba(8,9,10,.72); display: flex; justify-content: center; align-items: flex-start; padding: calc(7vh + env(safe-area-inset-top, 0px)) 14px 14px; }
+#typer .tybox { width: min(620px, 100%); background: #15171a; border: 1px solid rgba(239,235,225,.16); border-radius: 14px; padding: 16px; color: var(--chalk); font-family: var(--ui); }
+#tyTitle { font-weight: 700; font-size: 14px; margin-bottom: 10px; opacity: .85; }
+#tyIn { width: 100%; box-sizing: border-box; font: 600 18px var(--ui); color: var(--chalk); background: #0c0d0f; border: 2px solid var(--curb); border-radius: 10px; padding: 12px 14px; outline: none; }
+#tyKeys { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 12px; }
+#tyKeys .tk { font: 700 17px var(--ui); color: var(--chalk); background: #24272c; border: 2px solid transparent; border-radius: 8px; height: 44px; padding: 0; cursor: pointer; }
+#tyKeys .tk.wide { font-size: 13px; }
+#tyKeys .tk.lit { color: var(--curb); }
+#tyKeys .tk.on { background: var(--curb); color: #111; border-color: #fff; }
+#tyFoot { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: flex-end; align-items: center; margin-top: 12px; font-size: 12px; }
+#tyFoot span { display: inline-flex; align-items: center; gap: 6px; opacity: .85; }
+#tyFoot button { font: 700 14px var(--ui); color: var(--chalk); background: #2a2d33; border: 0; border-radius: 999px; min-height: 44px; padding: 0 22px; cursor: pointer; }
+#tyFoot button.go { background: var(--curb); color: #111; }
 #np { position: fixed; left: max(20px, env(safe-area-inset-left, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 45; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 10px; max-width: min(380px, 80vw); border-radius: 12px; background: rgba(14,15,17,.78); border-left: 4px solid var(--curb); color: var(--chalk); pointer-events: none; opacity: 0; transform: translateX(-24px); transition: opacity .35s ease, transform .35s ease; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 #np.on { opacity: 1; transform: none; }
 #np i { font-style: normal; font-size: 18px; width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--curb); color: #111; flex: none; }
@@ -344,10 +362,13 @@ body.touch #tr { right: 76px; }
 </div>
 
 <div id="np" hidden aria-live="polite"><i>&#9834;</i><span><b id="npTitle"></b><small id="npArtist"></small></span></div>
+<div id="chatfeed" aria-live="polite"></div>
+<div id="typer" hidden><div class="tybox"><div id="tyTitle"></div><input id="tyIn" type="text" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Message"><div id="tyKeys" hidden></div><div id="tyFoot"></div></div></div>
 <input type="file" id="musicFile" accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav,.flac,.opus" multiple hidden>
 <div id="touchui" hidden>
   <button class="tb" id="tbMenu" data-b="Menu" aria-label="Pause menu">&#9776;</button>
   <button class="tb" id="tbMusic" data-b="Music" aria-label="Music">&#9834;</button>
+  <button class="tb" id="tbChat" data-b="Chat" aria-label="Friends and chat">&#128172;</button>
   <div id="tbCol">
     <button class="tb" data-b="Y" aria-label="Get on or off the board">BOARD</button>
     <button class="tb" data-b="View" aria-label="Map (hold for replay)">MAP</button>
@@ -765,74 +786,6 @@ function ledgeBox(cx, cz, yaw, L, W, H, opts = {}) {
   return sf;
 }
 const SPOTS = []; // named spots for the map: [name, x, z, y?, yaw?]
-function buildYard() {
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), M.floor);
-  floor.rotation.x = -Math.PI / 2; putMesh(floor);
-  const outer = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), M.dirt);
-  outer.rotation.x = -Math.PI / 2; outer.position.y = -0.02; putMesh(outer);
-  const fenceH = 2.4;
-  for (const [cx, cz, yaw] of [[0, -49, Math.PI / 2], [0, 49, Math.PI / 2], [-49, 0, 0], [49, 0, 0]]) {
-    addSurface({ type: 'box', ox: cx - Math.sin(yaw) * 50, oz: cz - Math.cos(yaw) * 50, yaw, L: 100, W: 1, H: fenceH, invisible: true, fence: true });
-    const f = new THREE.Mesh(new THREE.BoxGeometry(yaw ? 100 : 0.08, fenceH, yaw ? 0.08 : 100), M.fence);
-    f.position.set(cx, fenceH / 2, cz); putMesh(f);
-  }
-  // roll-in
-  addSurface({ type: 'box', ox: 0, oz: -48.5, yaw: 0, L: 6.5, W: 9, H: 3 });
-  addSurface({ type: 'ramp', ox: 0, oz: -32, yaw: Math.PI, L: 10, W: 9, h0: 0, h1: 3 });
-  SPOTS.push(['Roll-in', 0, -46, 3, 0]);
-  ledgeBox(-12, -6, 0, 18, 0.9, 0.45, { edge: M.paint }); SPOTS.push(['Long ledge', -12, -6]);
-  railWithPosts({ x: 5, y: 0.38, z: -18 }, { x: 5, y: 0.38, z: 0 }, M.red); SPOTS.push(['Flat bar', 5, -9]);
-  ledgeBox(-2, -20, 0, 6, 2.6, 0.24); SPOTS.push(['Manny pad', -2, -20]);
-  addSurface({ type: 'ramp', ox: -4, oz: 6, yaw: 0, L: 2.4, W: 3, h0: 0, h1: 0.75 }); SPOTS.push(['Kicker', -4, 7]);
-  // plaza
-  addSurface({ type: 'box', ox: 21, oz: -14, yaw: 0, L: 26, W: 16, H: 1.0, mat: M.ledge });
-  for (let i = 0; i < 4; i++) addSurface({ type: 'box', ox: 13 - (i + 1) * 1.1, oz: -2, yaw: Math.PI / 2, L: 1.1, W: 8, H: 0.8 - i * 0.2, mat: M.ramp });
-  railWithPosts({ x: 13.4, y: 1.86, z: -6.4 }, { x: 8.2, y: 0.8, z: -6.4 }, M.paint);
-  addSurface({ type: 'ramp', ox: 21, oz: 18, yaw: Math.PI, L: 6, W: 16, h0: 0, h1: 1.0 });
-  ledgeBox(23, 0, 0, 10, 0.7, 1.45, { edge: M.steel });
-  SPOTS.push(['Plaza + 4 stair', 21, -2]);
-  // funbox
-  addSurface({ type: 'ramp', ox: -22, oz: 14, yaw: 0, L: 2.6, W: 6, h0: 0, h1: 0.8 });
-  ledgeBox(-22, 18.6, 0, 4, 6, 0.8, { grind: false });
-  addRail({ x: -25, y: 0.8, z: 16.7 }, { x: -25, y: 0.8, z: 20.5 }, 'ledge', null);
-  addRail({ x: -19, y: 0.8, z: 16.7 }, { x: -19, y: 0.8, z: 20.5 }, 'ledge', null);
-  addSurface({ type: 'ramp', ox: -22, oz: 23.2, yaw: Math.PI, L: 2.6, W: 6, h0: 0, h1: 0.8 });
-  railWithPosts({ x: -22, y: 1.25, z: 15.4 }, { x: -22, y: 1.25, z: 21.8 }, M.red);
-  SPOTS.push(['Funbox', -22, 18.6]);
-  // mini halfpipe (wood)
-  addSurface({ type: 'qp', ox: 12, oz: 30, yaw: Math.PI, R: 3.0, W: 12, deck: 2.2, mat: M.wood });
-  addSurface({ type: 'qp', ox: 12, oz: 37, yaw: 0, R: 3.0, W: 12, deck: 2.2, mat: M.wood });
-  SPOTS.push(['Mini ramp', 12, 33.5]);
-  // big vert
-  addSurface({ type: 'qp', ox: -38, oz: -16, yaw: -Math.PI / 2, R: 3.8, W: 16, deck: 3, mat: M.wood });
-  SPOTS.push(['Vert wall', -40, -16]);
-  ledgeBox(30, 28, 0, 14, 0.5, 0.32, { edge: M.paint }); SPOTS.push(['Curb', 30, 28]);
-  for (const [x, z] of [[-30, -30], [30, -30], [-30, 30], [32, 40], [0, 20]]) {
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 8, 6), M.dark); p.position.set(x, 4, z); putMesh(p);
-    addPole(x, z, 0.13, 8);
-    const l = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.18, 0.4), M.dark); l.position.set(x, 8, z); putMesh(l);
-    put(box(0.8, 0.04, 0.32), A.lampHead, x, 7.88, z); LAMPS.push({ x, y: 7.85, z, g: 0, k: 1.6 });
-  }
-  const rnd = mulberry(7);
-  for (let i = 0; i < 9; i++) {
-    const a = -0.9 + i * 0.35, r = 85 + rnd() * 40, h = 22 + rnd() * 26;
-    const s = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, h, 10), M.stack);
-    s.position.set(Math.sin(a) * r, h / 2, Math.cos(a) * r); putMesh(s);
-    if (i % 3 === 0) for (let k = 0; k < 2; k++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(1.75, 1.75, 2.2, 10), M.red); b.position.set(s.position.x, h - 2 - k * 5, s.position.z); putMesh(b); }
-  }
-  for (let i = 0; i < 6; i++) {
-    const a = 2.3 + i * 0.45, r = 75 + rnd() * 30;
-    const t = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 9 + rnd() * 6, 16), M.stack);
-    t.position.set(Math.sin(a) * r, 5, Math.cos(a) * r); putMesh(t);
-  }
-  for (let i = 0; i < 14; i++) {
-    const a = rnd() * TAU, r = 70 + rnd() * 70, w = 10 + rnd() * 18, h = 6 + rnd() * 14;
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w * (0.5 + rnd())), rnd() < 0.5 ? M.rust : M.dark);
-    b.position.set(Math.sin(a) * r, h / 2, Math.cos(a) * r); b.rotation.y = rnd() * 3; putMesh(b);
-  }
-  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 60, 10), M.rust);
-  pipe.rotation.z = Math.PI / 2; pipe.position.set(20, 3.5, 58); putMesh(pipe);
-}
 function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 /* =========================================================================
@@ -2781,7 +2734,7 @@ function clipDrive(dt, st) {
    Right stick convention: x right +, y DOWN + (pulled back toward you).
    ========================================================================= */
 const BTN = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'View', 'Menu', 'LS', 'RS', 'Up', 'Down', 'Left', 'Right'];
-const BTN_ALL = [...BTN, 'Music']; // Music only comes from the phone's ♪ button
+const BTN_ALL = [...BTN, 'Music', 'Chat']; // Music only comes from the phone's ♪ button
 const pad = { cur: {}, prev: {}, held: {}, down: new Set(), up: new Set() };
 const TOUCHB = new Set(), TFRESH = new Set(), TLATE = new Set(); // buttons held on the on-screen (phone) controls; a quick tap is held until the game has read it once
 for (const b of BTN) { pad.cur[b] = false; pad.prev[b] = false; pad.held[b] = 0; }
@@ -2793,6 +2746,7 @@ const ts = { id: null, x0: 0, y0: 0, x: 0, t0: 0, moved: false, tapPush: 0 };
 const arrowStick = { x: 0, y: 0 };
 let activePad = null;
 addEventListener('keydown', (e) => {
+  if (e.target && e.target.id === 'tyIn') { setMode('kb'); return; } // typing a chat message: the keys belong to the text box
   if (e.code === 'Tab' || e.code.startsWith('Arrow') || e.code === 'Space' || e.code === 'Backspace') e.preventDefault();
   if (!e.repeat) keyDown.add(e.code);
   keys.add(e.code);
@@ -3139,7 +3093,10 @@ function stepGround(dt) {
     enterAir(null); P.air.rolled = true; // rolled off an edge: no auto-grinds on the way down
     return;
   }
-  P.vy = (h - P.pos.y) / dt;
+  // rolling up onto a curb, a plank or the side of a bank is a step, not a ramp: don't turn the jump in height into
+  // upward speed (at 120 ticks a second a 15 cm curb used to read as 18 m/s and fling you into the sky)
+  const rise = h - P.pos.y, ns = gx * dx + gz * dzz;
+  P.vy = rise > 0.03 && rise > Math.abs(step * Math.max(slope, ns)) + 0.03 ? P.s * ns / Math.sqrt(1 + ns * ns) : rise / dt;
   P.pos.set(nx, h, nz); P.surf = sf; P.gx = gx; P.gz = gz;
   if (sf && sf.hazard) return bail(sf.hazard);
   if (P.manual) stepManual(dt);
@@ -3911,6 +3868,22 @@ function applyTOD(key) {
   scene.fog.color.set(t.fog); scene.fog.near = t.fogN; scene.fog.far = t.fogF;
   hemiLight.color.set(t.hemiS); hemiLight.groundColor.set(t.hemiG); hemiLight.intensity = t.hemi;
   sun.color.set(t.light); sun.intensity = t.lightI;
+  const at = typeof curMap === 'string' && MAPS[curMap] && MAPS[curMap].atmo; // per-map look (Rustline Yard): filmic tone, warmer lower sun, haze
+  if (at) {
+    hemiLight.intensity *= at.hemi; sun.intensity *= at.sun; scene.fog.near *= at.fog[0]; scene.fog.far *= at.fog[1];
+    if ((key || S.tod) === 'day' && at.day) { todSun.set(at.day[0], at.day[1], at.day[2]).normalize(); u.sunDir.value.copy(todSun); }
+    if (at.fogCol && (key || S.tod) === 'day') scene.fog.color.set(at.fogCol);
+    if (at.indoor) { // inside a building: the hall lights set the look, whatever the time of day outside
+      const I = at.indoor; hemiLight.color.set(I.sky); hemiLight.groundColor.set(I.ground); hemiLight.intensity = I.hemi;
+      sun.color.set('#fff4e6'); sun.intensity = I.sun; todSun.set(I.dir[0], I.dir[1], I.dir[2]).normalize();
+      scene.fog.near = 300; scene.fog.far = 900;
+    }
+  }
+  if (renderer) { renderer.toneMapping = at ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping; renderer.toneMappingExposure = at ? at.exposure : 1; }
+  if (sun) { // a wider, sharper shadow area for the detailed map
+    const sh = at && quality === 'high' ? at.shadow : 8, sc = sun.shadow.camera;
+    if (sc.right !== sh) { sc.left = sc.bottom = -sh; sc.right = sc.top = sh; sc.far = sh > 8 ? 120 : 60; sc.updateProjectionMatrix(); const ms = sh > 8 ? 2048 : 1024; if (sun.shadow.mapSize.x !== ms) { sun.shadow.mapSize.set(ms, ms); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } sun.shadow.normalBias = sh > 8 ? 0.035 : 0; }
+  }
   for (const m of WINDOW_MATS) m.emissiveIntensity = m.userData.lamp ? t.lamps * 1.3 : t.win;
   const night = t.lamps > 0;
   A.pool.opacity = t.lamps; A.pool.visible = night; A.beam.opacity = t.lamps; A.beam.visible = night;
@@ -4569,7 +4542,8 @@ function buildHill() {
 
 /* ------------------------------ registry + loading ------------------------------ */
 const MAPS = {
-  yard: { name: 'Rustline Yard', blurb: 'The original industrial yard: roll-in, plaza, funbox, mini ramp and a vert wall.', build: () => { buildYard(); bounds(-49, -49, 49, 49); }, spawn: { x: 0, y: 3, z: -46, yaw: 0 }, bounds: [-52, -52, 52, 52], cam: { x: 2, z: -4, r: 24, h: 6.5 } },
+  yard: { name: 'Bluewood Skatehouse', blurb: 'An indoor park in an old steel-framed hall: a mezzanine roll-in, quarter pipes, a big quarter, a funbox, a 3-stair with a handrail, ledges, rails and a bank to deck.', build: buildRailYard, spawn: { x: -13.3, y: 2.6, z: -22, yaw: Math.PI / 2 }, bounds: [-18, -27, 18, 27], cam: { x: 0, z: 0, r: 12, h: 4.5 },
+    atmo: { exposure: 1.0, hemi: 1, sun: 1, fog: [1, 1], shadow: 24, indoor: { sky: '#fff3e2', ground: '#8d8579', hemi: 1.3, sun: 0.85, dir: [0.16, 1, 0.1] } } },
   plaza: { name: 'Carver Plaza', blurb: 'Downtown. City Hall 7 with hubbas and rails, a fountain, granite ledges, curbs, a brick bank and a courthouse block.', build: buildPlaza, spawn: { x: -5, y: B0 + 1.68, z: 30, yaw: Math.PI }, bounds: [-56, -58, 58, 54], cam: { x: -5, z: 6, r: 30, h: 9 } },
   park: { name: 'Mosswood Skatepark', blurb: 'Poured concrete. A deep pool bowl with tile and coping, a kidney, a wooden vert ramp, a spine, rollers and a street section.', build: buildPark, spawn: { x: 2, y: 0, z: -42, yaw: -0.25 }, bounds: [-58, -62, 58, 58], cam: { x: -6, z: 4, r: 34, h: 10 } },
   school: { name: 'Westbrook High', blurb: 'An after-hours school. The Westbrook 8 with hubbas, ADA rails, a gap over the grass, a loading dock, courts and a parking lot.', build: buildSchool, spawn: { x: 0, y: 1.92, z: 24, yaw: Math.PI }, bounds: [-46, -62, 62, 52], cam: { x: 0, z: 0, r: 34, h: 10 } },
@@ -4746,6 +4720,263 @@ function buildCourse() {
   spot('Euro gap', 24, -33, 0, 0); spot('London gap', 44, -36, 0, 0); spot('The 3 / 5 / 8', -34, 4, 0.85, Math.PI);
   spot('Kinked rail', -5.5, 4, 1.44, Math.PI); spot('Mini ramp', 44, 8, 0, 0); spot('Pole jam', 32, 27, 0, 0); spot('Meridian 10', 0, 40, 1.7, Math.PI);
 }
+
+/* =========================================================================
+   BLUEWOOD SKATEHOUSE — an indoor skatepark in an old steel-framed hall
+   (replaces Rustline Yard; it keeps the map id 'yard' so saves still work).
+   Modelled on real indoor parks: a gable roof on rust-red steel rafters
+   with insulated ceiling panels and hanging high-bay lights, painted block
+   walls with a louvre window band and glass-block windows, a sealed
+   concrete floor, plywood ramps with blue painted sides, blue railings and
+   a mezzanine with a roll-in.
+
+   Plan (x east, z north; metres; interior x -17..17, z -26..26, eaves 6 m):
+     z 26 ┌────────────────────────────────────────────────────────┐
+          │ west bank │ mini quarters x -11..-1 │  bank → deck x 8-14 │
+          │ z 16-25   │   platform: 3-stair +    │                     │
+          │ QUARTER B │   handrail, bank behind  │   BIG QUARTER       │
+          │ z 6-14    │                          │   z 4-16 (east wall)│
+          │ QUARTER A │ flat bar  FUNBOX  manual │                     │
+          │ z -6..4   │ x -4      x -1..3  pad   │   curb ledge along  │
+          │ stairs ↑  │              bench       │   the east wall     │
+          │ MEZZANINE │ ← roll-in run-out →      │   z -24..-2         │
+          │ (spawn)   │   kicker · low ledge     │                     │
+     z-26 └────────────────────────────────────────────────────────┘
+   ========================================================================= */
+
+/* ------------------------------ textures ------------------------------ */
+function grain(g, w, h, n, a) { for (let i = 0; i < n; i++) { g.fillStyle = Math.random() < 0.5 ? 'rgba(0,0,0,' + Math.random() * a + ')' : 'rgba(255,255,255,' + Math.random() * a * 0.7 + ')'; g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 1 + Math.random() * 2); } }
+function skid(g, w, h, n, col) { for (let i = 0; i < n; i++) { g.strokeStyle = col; g.lineWidth = 1 + Math.random() * 3; g.beginPath(); const x = Math.random() * w, y = Math.random() * h, r = 30 + Math.random() * 160, a = Math.random() * 6; g.arc(x, y, r, a, a + 0.3 + Math.random() * 0.9); g.stroke(); } }
+const YT = {
+  // sealed concrete floor: cloudy, saw-cut joints, skate marks
+  floor: () => ctex('h_floor', 1024, 1024, (g, w, h) => {
+    g.fillStyle = '#a9a9a4'; g.fillRect(0, 0, w, h);
+    blotches(g, w, h, 60, 'rgba(255,255,250,.06)', 40, 180); blotches(g, w, h, 50, 'rgba(60,58,52,.07)', 40, 170);
+    grain(g, w, h, 70000, 0.06);
+    skid(g, w, h, 70, 'rgba(40,38,35,.13)'); skid(g, w, h, 30, 'rgba(20,20,20,.18)');
+    blotches(g, w, h, 8, 'rgba(30,30,30,.08)', 10, 40);
+    g.strokeStyle = 'rgba(40,40,38,.55)'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 1); g.lineTo(w, 1); g.moveTo(1, 0); g.lineTo(1, h); g.stroke();
+  }),
+  // plywood / skate-surface sheets: seams, screw rows, wheel polish
+  ply: () => ctex('h_ply', 512, 256, (g, w, h) => {
+    g.fillStyle = '#b88d5b'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 70; i++) { g.strokeStyle = 'rgba(110,70,35,' + (0.05 + Math.random() * 0.1) + ')'; g.lineWidth = 1 + Math.random() * 3; const y = Math.random() * h; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(w * 0.3, y + 4, w * 0.6, y - 4, w, y + (Math.random() - 0.5) * 6); g.stroke(); }
+    grain(g, w, h, 9000, 0.07);
+    skid(g, w, h, 30, 'rgba(70,55,40,.18)'); blotches(g, w, h, 10, 'rgba(70,55,40,.12)', 20, 80); blotches(g, w, h, 8, 'rgba(255,240,215,.08)', 30, 90);
+    g.fillStyle = 'rgba(60,40,20,.55)'; g.fillRect(0, 0, w, 2); g.fillRect(0, 0, 2, h);
+    for (let x = 10; x < w; x += 42) for (const y of [8, h / 2, h - 8]) { g.fillStyle = 'rgba(50,40,30,.75)'; g.beginPath(); g.arc(x, y, 1.8, 0, 7); g.fill(); }
+  }),
+  // blue painted ramp sides: seams, screws, scuffed through to the wood, a few stickers
+  blue: () => ctex('h_blue', 512, 256, (g, w, h) => {
+    g.fillStyle = '#2a50a2'; g.fillRect(0, 0, w, h); grain(g, w, h, 8000, 0.08);
+    blotches(g, w, h, 18, 'rgba(255,255,255,.06)', 20, 80);
+    for (let i = 0; i < 60; i++) { g.fillStyle = 'rgba(190,150,100,' + (0.25 + Math.random() * 0.4) + ')'; g.fillRect(Math.random() * w, h * (0.6 + Math.random() * 0.4), 2 + Math.random() * 14, 1 + Math.random() * 4); }
+    g.fillStyle = 'rgba(10,20,50,.45)'; g.fillRect(0, 0, 2, h); g.fillRect(0, 0, w, 2);
+    for (let x = 14; x < w; x += 46) for (let y = 14; y < h; y += 56) { g.fillStyle = 'rgba(15,20,40,.7)'; g.beginPath(); g.arc(x, y, 1.6, 0, 7); g.fill(); }
+    const cols = ['#f2efe6', '#e2b33a', '#d8392b', '#111', '#3fbf6a'];
+    for (let i = 0; i < 4; i++) { g.save(); g.translate(Math.random() * w, Math.random() * h * 0.7); g.rotate((Math.random() - 0.5) * 0.4); g.fillStyle = cols[i % cols.length]; g.fillRect(0, 0, 18 + Math.random() * 26, 10 + Math.random() * 12); g.restore(); }
+    const gb = g.createLinearGradient(0, h * 0.8, 0, h); gb.addColorStop(0, 'rgba(0,0,0,0)'); gb.addColorStop(1, 'rgba(0,0,0,.3)'); g.fillStyle = gb; g.fillRect(0, h * 0.8, w, h * 0.2);
+  }),
+  // painted concrete block wall
+  cmu: (base) => ctex('h_cmu' + base, 512, 512, (g, w, h) => {
+    g.fillStyle = base; g.fillRect(0, 0, w, h);
+    const bw = w / 8, bh = h / 16;
+    for (let r = 0; r < 16; r++) for (let c = -1; c < 9; c++) { const x = c * bw + (r % 2) * bw / 2, k = Math.random() * 10 - 5; g.fillStyle = 'rgba(' + (k > 0 ? '255,255,255,' : '0,0,0,') + Math.abs(k) / 100 + ')'; g.fillRect(x + 2, r * bh + 2, bw - 4, bh - 4); }
+    grain(g, w, h, 30000, 0.06);
+    g.strokeStyle = 'rgba(70,65,55,.35)'; g.lineWidth = 2;
+    for (let r = 0; r <= 16; r++) { g.beginPath(); g.moveTo(0, r * bh); g.lineTo(w, r * bh); g.stroke(); for (let c = -1; c < 9; c++) { const x = c * bw + (r % 2) * bw / 2; g.beginPath(); g.moveTo(x, r * bh); g.lineTo(x, r * bh + bh); g.stroke(); } }
+    blotches(g, w, h, 10, 'rgba(80,70,55,.07)', 30, 110);
+  }),
+  ceiling: () => ctex('h_ceil', 256, 256, (g, w, h) => {
+    g.fillStyle = '#d4d5d2'; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 32) { g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(x, 0, 4, h); g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(x + 4, 0, 3, h); }
+    grain(g, w, h, 3000, 0.05); blotches(g, w, h, 6, 'rgba(120,110,90,.08)', 20, 70);
+    g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(0, 0, w, 2);
+  }),
+  louver: () => ctex('h_louver', 256, 128, (g, w, h) => {
+    g.fillStyle = '#3c454b'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 8) { const gr = g.createLinearGradient(0, y, 0, y + 8); gr.addColorStop(0, 'rgba(200,215,225,.35)'); gr.addColorStop(1, 'rgba(10,12,14,.6)'); g.fillStyle = gr; g.fillRect(0, y, w, 8); }
+    g.fillStyle = '#1e2225'; for (let x = 0; x < w; x += 64) g.fillRect(x, 0, 5, h); g.fillRect(0, 0, w, 4); g.fillRect(0, h - 4, w, 4);
+  }),
+  glassBlock: () => ctex('h_gblock', 64, 128, (g, w, h) => {
+    g.fillStyle = '#9aa7ad'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 16) for (let x = 0; x < w; x += 16) { const gr = g.createRadialGradient(x + 8, y + 8, 1, x + 8, y + 8, 9); gr.addColorStop(0, '#f6fbfc'); gr.addColorStop(1, '#bccbd2'); g.fillStyle = gr; g.fillRect(x + 1, y + 1, 14, 14); }
+  }),
+  fascia: () => ctex('h_fascia', 256, 64, (g, w, h) => {
+    g.fillStyle = '#a8692e'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 16) { g.fillStyle = shade('#a8692e', Math.random() * 24 - 12); g.fillRect(0, y + 1, w, 14); g.fillStyle = 'rgba(40,20,5,.5)'; g.fillRect(0, y, w, 1.5); }
+    for (let i = 0; i < 40; i++) { g.strokeStyle = 'rgba(80,40,10,.25)'; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.lineTo(w, y + (Math.random() - 0.5) * 3); g.stroke(); }
+    grain(g, w, h, 1500, 0.08);
+  }),
+  rollDoor: () => ctex('h_roll', 256, 256, (g, w, h) => {
+    g.fillStyle = '#a7aaa9'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 10) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, y, w, 2); g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(0, y + 2, w, 2); }
+    grain(g, w, h, 3000, 0.08);
+  }),
+  rafter: () => ctex('h_rafter', 128, 128, (g, w, h) => { g.fillStyle = '#6f3b2a'; g.fillRect(0, 0, w, h); grain(g, w, h, 2500, 0.15); blotches(g, w, h, 8, 'rgba(230,220,200,.12)', 6, 20); blotches(g, w, h, 6, 'rgba(30,15,10,.25)', 6, 20); }),
+  glow: () => ctex('h_glow', 128, 128, (g, w, h) => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,248,230,.9)'); gr.addColorStop(0.35, 'rgba(255,244,220,.35)'); gr.addColorStop(1, 'rgba(255,240,210,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); })
+};
+function hlam(key, map, tile, o = {}) { const m = lam('H' + key, { map, bumpMap: o.bump ? map : null, bumpScale: o.bumpScale || 1, ...o.extra }, tile); if (o.noShadow) m.userData.noShadow = true; return m; }
+const HM = {
+  get floor() { if (AMAT.Hfloor) return AMAT.Hfloor; const m = AMAT.Hfloor = new THREE.MeshPhongMaterial({ map: YT.floor(), specular: 0x3a3a38, shininess: 38 }); m.name = 'Hfloor'; m.userData.tile = 6; return m; },
+  get ply() { return hlam('ply', YT.ply(), [2.44, 1.22], { bump: true, bumpScale: 0.6 }); },
+  get blue() { if (AMAT.Hblue) return AMAT.Hblue; const m = AMAT.Hblue = new THREE.MeshLambertMaterial({ map: YT.blue(), side: THREE.DoubleSide }); m.userData.tile = [2.44, 1.22]; return m; },
+  get blueSolid() { return hlam('bluesolid', YT.blue(), [2.44, 1.22]); },
+  get cmu() { return hlam('cmu', YT.cmu('#ddd5c2'), 3.2, { bump: true, bumpScale: 0.6 }); },
+  get cmuWhite() { return hlam('cmuw', YT.cmu('#e6e3da'), 3.2, { bump: true, bumpScale: 0.5 }); },
+  get ceiling() { const t = YT.ceiling(), m = hlam('ceil', t, 2.4, { noShadow: true, extra: { emissive: 0x7a7a78, emissiveMap: t } }); m.side = THREE.DoubleSide; return m; },
+  get rafter() { const t = YT.rafter(); return hlam('rafter', t, 1.2, { noShadow: true, extra: { emissive: 0x4a4440, emissiveMap: t } }); },
+  get purlin() { const m = lam('Hpurlin', { color: 0x5d4237 }); m.userData.tile = 0; m.userData.noShadow = true; return m; },
+  get louver() { const m = AMAT.Hlouver || (AMAT.Hlouver = new THREE.MeshLambertMaterial({ map: YT.louver(), emissive: 0x2b3338, side: THREE.DoubleSide })); m.userData.tile = [4, 2.4]; m.userData.noShadow = true; return m; },
+  get glassBlock() { const m = AMAT.Hgb || (AMAT.Hgb = new THREE.MeshBasicMaterial({ map: YT.glassBlock(), side: THREE.DoubleSide })); m.userData.tile = 0; m.userData.noShadow = true; return m; },
+  get fascia() { return hlam('fascia', YT.fascia(), [2, 0.5]); },
+  get rollDoor() { return hlam('roll', YT.rollDoor(), [3, 3]); },
+  get lens() { const m = AMAT.Hlens || (AMAT.Hlens = new THREE.MeshBasicMaterial({ color: 0xfff3d8 })); m.userData.tile = 0; m.userData.noShadow = true; return m; },
+  get floorGlow() { const m = AMAT.Hfg || (AMAT.Hfg = new THREE.MeshBasicMaterial({ map: YT.glow(), transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, ...decalOpts })); m.userData.tile = 0; m.userData.noShadow = true; return m; },
+  get railBlue() { return pal('#1f4fa8', true); },
+  get yellow() { return pal('#e8bd22', true); },
+  get black() { return pal('#1c1d1f', true); },
+  get steelDark() { return pal('#3a3c40'); },
+  get lampBody() { const m = lam('Hlamp', { color: 0x4a4d52 }); m.userData.tile = 0; m.userData.noShadow = true; return m; }
+};
+
+/* ------------------------------ helpers ------------------------------ */
+// paint the vertical faces of a plywood obstacle blue (both profile sides and the tall end), like real park ramps
+function blueSides(sf, ends = true) {
+  const rot = Math.atan2(-sf.fz, sf.fx), prof = new THREE.ShapeGeometry(profileShape(sf), 12);
+  for (const s of [-1, 1]) put(prof.clone().translate(0, 0, s * (sf.W / 2 + 0.006)), HM.blue, sf.ox, 0, sf.oz, rot, { tile: [2.44, 1.22] });
+  prof.dispose();
+  const top = sf.type === 'box' ? sf.H : sf.type === 'ramp' ? sf.h1 : sf.Hq;
+  if (ends && top > 0.05) put(new THREE.PlaneGeometry(sf.W, top).translate(0, top / 2, 0).rotateY(Math.PI / 2).translate(sf.L + 0.006, 0, 0), HM.blue, sf.ox, 0, sf.oz, rot, { tile: [2.44, 1.22] });
+  if (sf.type === 'box' && ends) put(new THREE.PlaneGeometry(sf.W, sf.H).translate(0, sf.H / 2, 0).rotateY(-Math.PI / 2).translate(-0.006, 0, 0), HM.blue, sf.ox, 0, sf.oz, rot, { tile: [2.44, 1.22] });
+  if (sf.type === 'qp' || (sf.type === 'ramp' && sf.h0 < 0.02)) { const [mx, mz] = toWorld(sf, 0.15, 0); put(box(0.3, 0.012, sf.W), A.galv, mx, 0, mz, rot); } // steel transition plate at the bottom
+}
+const quarter = (ox, oz, yaw, R, W, deck, o = {}) => { const sf = addSurface({ type: 'qp', ox, oz, yaw, R, W, deck, mat: HM.ply, copingMat: A.galv }); blueSides(sf, o.ends !== false); return sf; };
+const bank = (x0, z0, yaw, L, W, h0, h1, o = {}) => { const sf = slope(x0, z0, yaw, L, W, h0, h1, HM.ply); blueSides(sf, o.ends !== false); return sf; };
+const deckBox = (cx, cz, w, d, h, yaw = 0, o = {}) => {
+  const sf = block(cx, cz, w, d, h, HM.ply, yaw); blueSides(sf, o.ends !== false);
+  if (o.grind) for (const s of [-1, 1]) { const [ax, az] = toWorld(sf, 0.05, s * w / 2), [bx, bz] = toWorld(sf, d - 0.05, s * w / 2); addRail({ x: ax, y: h, z: az }, { x: bx, y: h, z: bz }, 'ledge', null); const e = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, d), A.galv); const [mx, mz] = toWorld(sf, d / 2, s * (w / 2 - 0.02)); e.position.set(mx, h - 0.022, mz); e.rotation.y = yaw; putMesh(e); }
+  return sf;
+};
+// a blue tube railing (also a fence you can't ride through)
+function blueRail(ax, az, bx, bz, y0 = 0, h = 1.05, o = {}) {
+  const len = Math.hypot(bx - ax, bz - az), yaw = Math.atan2(bx - ax, bz - az), n = Math.max(1, Math.round(len / 1.4));
+  for (let i = 0; i <= n; i++) { const t = i / n; put(cyl(0.025, 0.025, h, 6), HM.railBlue, lerp(ax, bx, t), y0, lerp(az, bz, t)); }
+  for (const y of [h, h * 0.5]) put(new THREE.CylinderGeometry(0.025, 0.025, len, 6).rotateX(Math.PI / 2), HM.railBlue, (ax + bx) / 2, y0 + y, (az + bz) / 2, yaw, { uv: false });
+  if (o.bars) for (let d = 0.12; d < len; d += 0.12) { const t = d / len; put(cyl(0.008, 0.008, h * 0.5, 4), HM.railBlue, lerp(ax, bx, t), y0 + h * 0.5, lerp(az, bz, t)); }
+  addSurface({ type: 'box', ox: ax, oz: az, yaw, L: len, W: 0.12, H: y0 + h, invisible: true, fence: true });
+}
+function wallPlane(geo, mat, x, y, z, yaw, o = {}) { put(geo, mat, x, y, z, yaw, { uv: false, ...o }); }
+function highBay(x, y, z, drop = 1.2) {
+  put(cyl(0.012, 0.012, drop, 4), HM.lampBody, x, y - drop, z);
+  put(new THREE.SphereGeometry(0.38, 14, 6, 0, TAU, 0, Math.PI / 2).translate(0, -0.05, 0), HM.lampBody, x, y - drop - 0.3, z, 0, { uv: false });
+  put(new THREE.CircleGeometry(0.33, 16).rotateX(Math.PI / 2), HM.lens, x, y - drop - 0.33, z, 0, { uv: false });
+  put(plane(3.4, 3.4), HM.floorGlow, x, 0.02, z, 0, { uv: false });
+  LAMPS.push({ x, y: y - drop - 0.4, z, g: 0, k: 0.8 });
+}
+function plySheet(x, z, yaw, lean) { put(box(1.22, 2.44, 0.02), HM.ply, x, 0, z, yaw, { rx: lean, tile: [2.44, 1.22] }); }
+
+/* ------------------------------ the building ------------------------------ */
+const HX = 17, HZ = 26, EAVE = 6, RIDGE = 9;
+function hallShell() {
+  patch(-HX - 0.2, -HZ - 0.2, HX + 0.2, HZ + 0.2, HM.floor, 0.004);
+  patch(-60, -60, 60, 60, A.asphalt, 0);
+  const outer = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), M.dirt); outer.rotation.x = -Math.PI / 2; outer.position.y = -0.03; putMesh(outer);
+  // walls: painted block; a louvre window band on the west wall, glass-block windows on the east
+  const W_ = (ax, az, bx, bz, mat) => wallLine(ax, az, bx, bz, EAVE, mat, 0.3, 0, { fence: true });
+  W_(-HX - 0.15, -HZ - 0.15, -HX - 0.15, HZ + 0.15, HM.cmu); W_(HX + 0.15, -HZ - 0.15, HX + 0.15, HZ + 0.15, HM.cmu);
+  W_(-HX - 0.15, HZ + 0.15, HX + 0.15, HZ + 0.15, HM.cmuWhite); W_(-HX - 0.15, -HZ - 0.15, HX + 0.15, -HZ - 0.15, HM.cmuWhite);
+  wallPlane(new THREE.PlaneGeometry(2 * HZ, 2.3).rotateY(Math.PI / 2), HM.louver, -HX + 0.02, 4.75, 0, 0, { uvFn: (g) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * 13); } });
+  for (let z = -HZ + 1.6; z < HZ - 1; z += 2.6) wallPlane(new THREE.PlaneGeometry(0.85, 1.7).rotateY(-Math.PI / 2), HM.glassBlock, HX - 0.02, 4.75, z, 0);
+  for (const zs of [-1, 1]) { // gable ends above the eaves, with a row of small windows
+    const sh = new THREE.Shape(); sh.moveTo(-HX - 0.3, 0); sh.lineTo(HX + 0.3, 0); sh.lineTo(0, RIDGE - EAVE); sh.closePath();
+    put(new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false }).translate(0, 0, -0.15), HM.cmuWhite, 0, EAVE, zs * (HZ + 0.15), 0);
+    for (const x of [-9, -3, 3, 9]) wallPlane(new THREE.PlaneGeometry(0.75, 1.3), HM.glassBlock, x, EAVE - 1.2, zs * (HZ - 0.02), zs > 0 ? Math.PI : 0);
+  }
+  // roof: two slopes of insulated panels on rust-red rafters, purlins between
+  const a = Math.atan2(RIDGE - EAVE, HX), sl = Math.hypot(HX + 0.3, RIDGE - EAVE);
+  for (const s of [-1, 1]) put(box(sl, 0.08, 2 * HZ + 0.6), HM.ceiling, s * (HX + 0.3) / 2, (EAVE + RIDGE) / 2, 0, 0, { rz: -s * a, tile: [2.4, 2.4] });
+  for (let z = -HZ + 0.4; z <= HZ - 0.3; z += 6.5) for (const s of [-1, 1]) {
+    put(box(sl - 0.3, 0.55, 0.22), HM.rafter, s * HX / 2, (EAVE + RIDGE) / 2 - 0.36, z, 0, { rz: -s * a });
+    put(box(0.35, EAVE + 0.1, 0.4), HM.rafter, s * (HX - 0.15), 0, z);
+    put(box(1.6, 0.25, 0.2), HM.rafter, s * (HX - 0.85), EAVE - 0.7, z, 0, { rz: s * 0.55 });
+  }
+  for (let t = 0.08; t < 1; t += 0.09) for (const s of [-1, 1]) put(box(0.1, 0.18, 2 * HZ + 0.4), HM.purlin, s * HX * (1 - t), EAVE + (RIDGE - EAVE) * t - 0.16, 0);
+  // lights: rows of hanging high-bays, and their reflection on the sealed floor
+  for (const x of [-11.5, -4, 4, 11.5]) for (let z = -22.75; z <= 23; z += 6.5) highBay(x, EAVE + (RIDGE - EAVE) * (1 - Math.abs(x) / HX) - 0.3, z, 1.0);
+  for (const [x, z] of [[-14, -16], [14, -16], [-14, 14], [14, 14]]) { put(box(0.9, 0.7, 0.6), HM.lampBody, x, EAVE - 0.4, z); put(cyl(0.02, 0.02, 0.8, 4), HM.lampBody, x, EAVE + 0.3, z); } // unit heaters
+  put(cyl(0.45, 0.45, 2 * HZ - 4, 14).rotateX(Math.PI / 2).translate(0, 0, 0), A.galv, 0, RIDGE - 1.3, 0, 0, { uv: false });                                                            // duct along the ridge
+  for (const z of [-18, -6, 6, 18]) put(box(0.6, 0.45, 0.8), HM.black, 6.5, EAVE + 0.6, z);                                    // speakers
+  // wall dressing: doors, exit signs, banners, extinguishers, spare plywood
+  wallPlane(new THREE.PlaneGeometry(4.2, 3.6), HM.rollDoor, 6, 1.8, -HZ + 0.02, 0); put(box(4.5, 0.25, 0.25), HM.steelDark, 6, 3.6, -HZ + 0.1);
+  wallPlane(new THREE.PlaneGeometry(0.95, 2.1), HM.blueSolid, 13, 1.05, -HZ + 0.02, 0);
+  wallPlane(new THREE.PlaneGeometry(0.95, 2.1), HM.blueSolid, 13, 1.05, HZ - 0.02, Math.PI);
+  for (const [z, yaw] of [[-HZ + 0.03, 0], [HZ - 0.03, Math.PI]]) signBoard('exit' + yaw, 'EXIT', '#1d1d1d', '#e8392b', 13, 2.45, z, 0.7, 0.26, yaw, true);
+  signBoard('hbn1', 'BLUEWOOD SKATEHOUSE', '#1f4fa8', '#f2efe6', 0, 7.0, HZ - 0.05, 12, 1.6, Math.PI);
+  signBoard('hbn2', 'RESPECT THE SESSION', '#f2efe6', '#1f4fa8', -2, 4.6, -HZ + 0.05, 7, 0.9, 0);
+  signBoard('hbn3', 'STEEZE', '#141518', '#f5c518', HX - 0.05, 3.0, -14, 4, 1.1, -Math.PI / 2);
+  signBoard('hbn4', 'NO BIKES · PADS UNDER 18', '#e8392b', '#ffffff', -HX + 0.05, 3.05, 18, 5, 0.6, Math.PI / 2);
+  for (const [x, z, yaw] of [[-HX + 0.05, -4, Math.PI / 2], [HX - 0.05, 0, -Math.PI / 2], [-4, HZ - 0.05, Math.PI]]) put(cyl(0.08, 0.08, 0.5, 8), pal('#c8241c'), x + Math.sin(yaw) * 0.08, 1.0, z + Math.cos(yaw) * 0.08);
+  for (let i = 0; i < 3; i++) plySheet(-HX + 0.25, 4.7 + i * 0.05, Math.PI / 2, -0.12 - i * 0.03);
+}
+
+function buildRailYard() { // (MAPS.yard still calls this name)
+  hallShell();
+  /* ---- mezzanine (spawn) with offices under it, the roll-in, stairs ---- */
+  const MZ0 = -HZ, MZ1 = -12, MX1 = -12, MH = 2.6;
+  block(-14.5, (MZ0 + MZ1) / 2, HX + MX1, MZ1 - MZ0, MH, HM.ply);
+  wallPlane(new THREE.PlaneGeometry(MZ1 - MZ0, 1.95).rotateY(Math.PI / 2), HM.cmuWhite, MX1 + 0.012, 0.975, (MZ0 + MZ1) / 2, 0, { uv: true });
+  wallPlane(new THREE.PlaneGeometry(MZ1 - MZ0, 0.65).rotateY(Math.PI / 2), HM.fascia, MX1 + 0.014, 2.275, (MZ0 + MZ1) / 2, 0, { uvFn: (g) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * 7); } });
+  for (const z of [-17.4, -14.4]) wallPlane(new THREE.PlaneGeometry(0.95, 1.9), HM.blueSolid, MX1 + 0.02, 0.95, z, Math.PI / 2);
+  wallPlane(new THREE.PlaneGeometry(1.6, 0.9), A.glass, MX1 + 0.02, 1.35, -25, Math.PI / 2);
+  bank(-6.2, -22, -Math.PI / 2, 5.8, 4, 0, MH);                                                   // roll-in
+  for (const z of [-24.15, -19.85]) put(cyl(0.04, 0.04, 1.1, 6), HM.yellow, MX1 - 0.15, MH, z);
+  put(new THREE.CylinderGeometry(0.03, 0.03, 4.3, 6).rotateX(Math.PI / 2), HM.yellow, MX1 - 0.15, MH + 1.1, -22, 0, { uv: false });
+  blueRail(MX1 - 0.05, MZ0, MX1 - 0.05, -24.2, MH, 1.05, { bars: true }); blueRail(MX1 - 0.05, -19.8, MX1 - 0.05, MZ1 - 0.05, MH, 1.05, { bars: true });
+  blueRail(-HX, MZ1 - 0.05, -15.7, MZ1 - 0.05, MH, 1.05, { bars: true }); blueRail(-13.3, MZ1 - 0.05, MX1 - 0.05, MZ1 - 0.05, MH, 1.05, { bars: true });
+  const st = stairs(-14.5, MZ1, 0, 2.2, 9, MH / 9, 0.3, 0, HM.ply);
+  stairRail(-14.5, MZ1, 0, st, 1.2, 0, HM.railBlue); stairRail(-14.5, MZ1, 0, st, -1.2, 0, HM.railBlue);
+  put(box(2.0, 0.42, 0.85), pal('#3a3f4a'), -15.5, MH, -25.2, 0); put(box(2.0, 0.6, 0.22), pal('#30343d'), -15.5, MH + 0.42, -25.55, 0); colBox(-15.5, -25.3, 2.0, 0.95, MH + 1.0);
+  spot('Mezzanine roll-in', -14.5, -22, MH, Math.PI / 2);
+
+  /* ---- west wall: two quarters and a bank ---- */
+  quarter(-HX + 3.55, -1, -Math.PI / 2, 2.4, 10, 1.2); spot('Quarter pipes', -10, 0, 0, -Math.PI / 2);
+  quarter(-HX + 2.565, 10, -Math.PI / 2, 1.6, 8, 1.0);
+  bank(-10.8, 20.5, -Math.PI / 2, 5, 9, 0, 1.8); deckBox(-16.4, 20.5, 9, 1.2, 1.8, Math.PI / 2, { ends: false });
+
+  /* ---- east wall: the big quarter and a long curb ledge ---- */
+  quarter(HX - 4.13, 10, Math.PI / 2, 3.0, 12, 1.2); spot('Big quarter', 10, 10, 0, Math.PI / 2);
+  ledgeBox(HX - 1.4, -13, 0, 22, 0.6, 0.45, { mat: HM.blueSolid, edge: A.galv, ends: true }); spot('Curb ledge', 13, -13, 0, 0);
+
+  /* ---- north end: mini quarters, and a bank up to a deck ---- */
+  quarter(-6, HZ - 2.76, 0, 1.8, 10, 1.0);
+  bank(11, 17.6, 0, 5, 6, 0, 1.3); deckBox(11, 24.3, 6, 3.4, 1.3, 0, { grind: true });
+  blueRail(8, HZ - 0.15, 14, HZ - 0.15, 1.3, 1.0);
+  spot('Bank to deck', 11, 16, 0, 0);
+
+  /* ---- the street section in the middle ---- */
+  { const sf = ledgeBox(1, 0, 0, 6, 4, 0.7, { mat: HM.ply, edge: A.galv }); blueSides(sf); bank(1, -5.4, 0, 2.4, 4, 0, 0.7); bank(1, 5.4, Math.PI, 2.4, 4, 0, 0.7); spot('Funbox', 1, -8, 0, 0);
+    railWithPosts({ x: 1, y: 1.06, z: -1.6 }, { x: 1, y: 1.06, z: 3.0 }, HM.black); railWithPosts({ x: 1, y: 1.06, z: 3.0 }, { x: 1, y: 0.36, z: 5.3 }, HM.black); } // flat-down kink rail
+  railWithPosts({ x: -4, y: 0.36, z: -6 }, { x: -4, y: 0.36, z: 4 }, HM.black, { r: 0.03 });                  // flat bar
+  ledgeBox(8, 0, 0, 5, 1.6, 0.32, { mat: HM.blueSolid, edge: A.galv, ends: true });                          // manual pad
+  { const L = 3.2, H = 0.48; ledgeBox(6.5, -8, Math.PI / 2, L, 0.5, H, { mat: pal('#8fc6e2'), edge: false, ends: true }); for (const e of [-1, 1]) put(box(0.12, H, 0.42), pal('#7db4d0'), 6.5 + e * 1.2, 0, -8); } // painted bench
+  { const st3 = stairs(4.5, 12, Math.PI, 7, 3, 0.25, 0.45, 0, HM.ply); ledgeBox(4.5, 13.75, Math.PI / 2, 7, 3.5, 0.75, { mat: HM.ply, sides: [], ends: true }); for (const ex of [1.02, 7.98]) put(box(0.04, 0.04, 3.4), A.galv, ex, 0.71, 13.75);
+    railWithPosts({ x: 4.5, y: 0.75 + 0.72, z: 12.35 }, { x: 4.5, y: 0.72, z: st3.bz - 0.55 }, HM.black); /* a friendly low handrail */ bank(4.5, 18.5, Math.PI, 3, 7, 0, 0.75);
+    put(new THREE.ConeGeometry(0.16, 0.6, 10).translate(0, 0.3, 0), pal('#f06a1a'), 9.0, 0, 10.7); spot('Stair set', 4.5, 8.5, 0, 0); }
+  bank(-4, -16.2, 0, 1.8, 1.8, 0, 0.5);                                                                     // wedge kicker
+  ledgeBox(4, -17.4, Math.PI / 2, 8, 0.5, 0.4, { mat: HM.blueSolid, edge: A.galv, ends: true });             // long low ledge
+
+  /* ---- people stuff: benches, bins, a fountain, boards on a rack, a few tags ---- */
+  bench(3, -25.25, Math.PI / 2, 2.4); bench(9, -25.25, Math.PI / 2, 2.4);
+  trashCan(-10.6, -10.8); trashCan(15.8, 20.5); trashCan(-2, -25.4);
+  put(box(0.5, 0.9, 0.35), HM.steelDark, 0.2, 0, -HZ + 0.2); colBox(0.2, -HZ + 0.2, 0.5, 0.35, 0.9);
+  for (let i = 0; i < 5; i++) put(box(0.2, 0.8, 0.02), pal(['#2a4bd7', '#e2b33a', '#d8392b', '#f2efe6', '#3d8b52'][i]), -16.6, 0.25, -9 - i * 0.28, Math.PI / 2, { rx: -0.2 });
+  tag(-HX + 0.06, 1.6, -9.5, 1.8, Math.PI / 2); tag(HX - 0.06, 1.4, -24.5, 1.6, -Math.PI / 2); tag(9, 1.2, HZ - 0.06, 1.6, Math.PI);
+
+  bounds(-HX - 0.6, -HZ - 0.6, HX + 0.6, HZ + 0.6);
+}
+// the spot menu keeps a screenshot of each map: drop the old Rustline Yard ones so the new park shows
+try { if (store.get('yardV', 0) !== 4) { for (const t of ['day', 'golden', 'sunset', 'night']) store.set('prev_yard_' + t, null); store.set('yardV', 4); } } catch (e) { }
 
 /* =========================================================================
    SCORING — tricks chain into a line; the multiplier grows with each trick,
@@ -5479,7 +5710,7 @@ function updateHud(dt) {
   $('tr').hidden = !S.monitor;
   if (S.monitor) { drawStick(); $('inmode').textContent = inp.mode === 'pad' ? 'Flick-it' : inp.mode === 'touch' ? 'Flick pad' : 'Flick · drag / arrows'; }
   // hold progress (D-pad up marker, D-pad down restart, View replay)
-  const holds = [['Up', 0.6, 'Set session marker'], ['Down', 0.8, 'Restart at the roll-in'], ['View', 0.35, 'Replay']];
+  const holds = [['Up', 0.6, 'Set session marker'], ['View', 0.35, 'Replay']];
   let shown = false;
   for (const [b, need, label] of holds) {
     if (pad.cur[b] && pad.held[b] > 0.12 && !(holdState[b] && holdState[b].fired)) {
@@ -5648,7 +5879,7 @@ function setSetting(k, v) {
 function applySettingsSideEffects(k) {
   audio.setVolumes();
   if (!k || k === 'quality' || k === 'resScale') applyQuality();
-  if ((!k || k === 'tod') && skyDome) applyTOD();
+  if ((!k || k === 'tod' || k === 'quality') && skyDome) applyTOD();
   if (k === 'stance' && skeleton) buildLook(LOOK);
   if (k === 'vibration' || k === 'vibeStr') rumble(0.4, 0.6, 140, true);
 }
@@ -5705,6 +5936,7 @@ function optionsScreen() {
       { label: 'Settings', sub: 'Gameplay, camera, sound and graphics', run: () => openScreen(settingsScreen()) },
       { label: 'Controls', sub: 'Controller, keyboard and touch', run: () => openScreen(controlsScreen()) },
       { label: 'How to flick', sub: 'How every trick comes from the right stick', run: () => openScreen(howScreen()) },
+      { label: 'Friends & chat', sub: 'Add friends, see who\'s online and chat', run: () => openScreen(socialScreen(1)) },
       { label: 'Music', sub: 'Add your own songs from this device', value: MYM.songs.length ? MYM.songs.length + (MYM.songs.length === 1 ? ' song' : ' songs') : '', run: () => openScreen(musicScreen()) },
       { label: 'Online name', value: escapeHtml(NET.name), run: () => { netRename(); renderScreen(); titleCard(); } }
     ]
@@ -5745,8 +5977,10 @@ function pauseScreen() {
       { label: 'Change spot', value: (MAPS[curMap] || MAPS.yard).name, run: () => openScreen(spotScreen()) },
       { label: 'Game modes', sub: MODE.jam ? 'Own the Spot is on' : MODE.duel ? 'S.T.E.E.Z.E is on' : 'Own the Spot · S.T.E.E.Z.E', run: () => openScreen(modesScreen()) },
       { label: 'Your skater', run: () => { UI.stack = []; openCloset(); } },
+      { label: 'Friends & chat', sub: 'Chat with skaters here, add friends, see who\'s online', value: socUnreadAll() ? '<b style="color:var(--curb)">' + socUnreadAll() + ' new</b>' : '', run: () => openScreen(socialScreen(socUnreadAll() ? 1 : 0)) },
       { label: 'Music', sub: 'Skip, pause or add your own songs', value: MYM.songs.length ? MYM.songs.length + (MYM.songs.length === 1 ? ' song' : ' songs') : '', run: () => openScreen(musicScreen()) },
-      { label: P.marker ? 'Go to session marker' : 'Set session marker here', sub: P.marker ? 'Hold ' + glyph('Up') + ' in game to move it' : 'Only works while rolling on the ground', run: () => { if (P.marker) { respawn(P.marker); closeAllToPlay(); } else if (P.state === 'ground') { setMarker(); closeAllToPlay(); } else toast('Get on the ground to drop a marker'); } },
+      { label: P.marker ? 'Go to session marker' : 'Set session marker here', sub: P.marker ? 'Takes you back to where you placed it' : 'Works on your board or on foot', run: () => { if (P.marker) { loseLineQuiet(); respawn(P.marker); closeAllToPlay(); } else if (canMark()) { setMarker(); closeAllToPlay(); } else toast('Land first, then drop a marker'); } },
+      ...(P.marker ? [{ label: 'Move session marker here', sub: 'Works on your board or on foot', run: () => { if (canMark()) { setMarker(); closeAllToPlay(); } else toast('Land first, then drop a marker'); } }] : []),
       { label: 'Restart at the start', run: () => { P.marker = null; respawn(SPAWN); loseLineQuiet(); closeAllToPlay(); } },
       { type: 'section', label: 'Game' },
       ...(NET.room && NET.room.kind === 'supa' ? [{ label: 'Online name', value: escapeHtml(NET.name), run: () => { netRename(); renderScreen(); } }] : []),
@@ -5837,7 +6071,8 @@ function settingsScreen() {
     }
   };
 }
-function setMarker() { P.marker = { x: P.pos.x, y: P.pos.y, z: P.pos.z, yaw: travelYaw() }; toast('<b>Session marker</b> set. Tap ' + glyph('Up') + ' to come back here.'); rumble(0.2, 0.4, 90); }
+const canMark = () => P.state === 'ground' || P.state === 'walk'; // on the board or on foot
+function setMarker() { P.marker = { x: P.pos.x, y: P.pos.y, z: P.pos.z, yaw: P.state === 'walk' && P.walk ? P.walk.yaw : travelYaw() }; toast('<b>Session marker</b> set. Tap ' + glyph('Up') + ' to come back here.'); rumble(0.2, 0.4, 90); }
 
 // controller diagram: an original line drawing of a generic twin-stick pad plus a readable legend
 function mapping() {
@@ -5847,7 +6082,7 @@ function mapping() {
     ['B', 'Brake · exit grind · powerslide with L · off board: drop / grab board'], ['Y', 'Off / on board · call your board back'],
     ['LT', 'Grab (lead hand)'], ['RT', 'Grab (back hand)'], ['RB', 'Handplant at a coping'], ['LB', 'Gestures: hold, D-pad picks'],
     ['View', 'Map · hold for replay'], ['Menu', 'Pause'],
-    ['Up', 'Session marker: tap to go, hold to set'], ['Down', 'Hold to restart at the roll-in'],
+    ['Up', 'Session marker: tap to go, hold to set'],
     ['Right', 'Flick-it monitor on / off']
   ];
 }
@@ -5875,7 +6110,7 @@ function controlsScreen() {
   const kbRows = () => [
     ['W / Space', 'Push · pump on transitions · lean at the lip'], ['A / D', 'Steer · spin · balance on grinds'], ['S', 'Brake · hop off a grind'], ['Shift', 'Powerslide'],
     ['Mouse drag or arrows', 'Flick tricks · board adjust'], ['C / V', 'Manual / nose manual (W and S to balance)'], ['Q / E or right mouse', 'Grabs'], ['G', 'Handplant'], ['F', 'Get off / on · call your board back'], ['S (off board)', 'Set the board down / pick it up'], ['W tapped (off board)', 'Sprint'], ['H', 'Gesture'],
-    ['Tab', 'Map (tap) · replay (hold)'], ['T', 'Session marker (tap go, hold set)'], ['Backspace (hold)', 'Restart at the roll-in'], [']', 'Flick-it monitor'], ['Esc', 'Pause']
+    ['Tab', 'Map (tap) · replay (hold)'], ['T', 'Session marker (tap go, hold set)'], [']', 'Flick-it monitor'], ['Esc', 'Pause']
   ].map(([k, l]) => ({ label: l, value: '<span class="g key">' + escapeHtml(k) + '</span>', type: 'info' }));
   return {
     id: 'controls', title: 'Controls',
@@ -6092,7 +6327,7 @@ async function supaRoom() {
     for (const id in st) {
       if (id === me) continue; seen.add(id);
       const m = (st[id] && st[id][0]) || {}; let p = peers.get(id); const fresh = !p; if (!p) { p = mk(id); peers.set(id, p); }
-      p.presence = Object.assign({}, p.presence, { v: m.v, m: m.m, h: m.h, l: m.l, n: m.n, g: m.g });
+      p.presence = Object.assign({}, p.presence, { v: m.v, m: m.m, h: m.h, l: m.l, n: m.n, g: m.g, f: m.f, c: m.c });
       (fresh ? joined : updated).push(p);
     }
     for (const [id, p] of peers) if (!seen.has(id)) { peers.delete(id); left.push(p); }
@@ -6108,7 +6343,7 @@ async function supaRoom() {
     kind: 'supa',
     async presence(patch) {
       for (const k in patch) { if (patch[k] === null) delete mine[k]; else mine[k] = patch[k]; }
-      const slow = { v: mine.v, m: mine.m, h: mine.h, l: mine.l, n: mine.n, g: mine.g }, js = JSON.stringify(slow);
+      const slow = { v: mine.v, m: mine.m, h: mine.h, l: mine.l, n: mine.n, g: mine.g, f: mine.f, c: mine.c }, js = JSON.stringify(slow);
       if (js !== tracked) { tracked = js; ch.track(slow); }
       if (typeof patch.s === 'string') ch.send({ type: 'broadcast', event: 'pose', payload: { id: me, s: patch.s, m: mine.m, h: mine.h, g: mine.g } }); // game-mode state rides along so scores and turns show up fast
     },
@@ -6185,6 +6420,7 @@ function netUpdate(p) {
   if (!a.by && typeof pr.n === 'string') { const n = netCleanName(pr.n) || 'Skater'; if (n !== a.name) { a.name = n; if (a.av) a.av.label.textContent = n; } }
   if (typeof pr.g === 'string' && pr.g.length < 4000 && pr.g !== a.gStr) { a.gStr = pr.g; try { const g = JSON.parse(pr.g); a.g = g && typeof g.id === 'string' ? g : null; } catch (e) { a.g = null; } }
   if (typeof pr.s === 'string' && pr.s.length < 4000) { const st = netDecode(pr.s); if (st) { a.st = st; a.t = performance.now(); } }
+  try { socPeer(a, pr); } catch (e) { }
 }
 async function netName(a) {
   if (!NET.user || !a.by) return;
@@ -6238,7 +6474,7 @@ function netTick(dt) {
     const hidden = CL.on || mode === 'title' || mode === 'replay';
     const still = (P.state === 'walk' && P.walk.speed < 0.05) || (P.state === 'ground' && P.s < 0.05 && P.pushT < 0);
     NET.sendT = NET.room.kind === 'supa' ? (hidden ? 2 : still ? 0.7 : 0.15) : 0.1;   // the website relay is metered: ~6 a second while moving
-    const patch = { v: 1, m: curMap, h: hidden ? 1 : 0, n: NET.name, g: MODE.pub, s: hidden ? null : netEncode() };
+    const patch = { v: 1, m: curMap, h: hidden ? 1 : 0, n: NET.name, g: MODE.pub, f: SOC.id, c: socOutbox(), s: hidden ? null : netEncode() };
     if (NET.lookDirty) { patch.l = JSON.stringify(LOOK); NET.lookDirty = false; }
     NET.room.presence(patch).catch(() => { });
   }
@@ -6773,6 +7009,224 @@ function modesScreen() {
 modePublish();
 
 /* =========================================================================
+   FRIENDS & CHAT — no accounts. Every device gets a friend code the first
+   time the game opens; friends are kept in this browser. A friend is
+   "online" when someone with their code is in the game right now.
+   Messages ride along with the presence each player already shares
+   (a tiny outbox of the last few lines), so they work the same on the
+   website and inside Claude, and only reach players who are online.
+   Session chat = everyone at your spot. Private = one friend.
+   ========================================================================= */
+const SOC_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const SOC = {
+  id: (() => { let c = store.get('socId', ''); if (!/^[A-Z2-9]{8}$/.test(c)) { c = ''; for (let i = 0; i < 8; i++) c += SOC_ABC[Math.floor(Math.random() * SOC_ABC.length)]; store.set('socId', c); } return c; })(),
+  friends: (store.get('friends', []) || []).filter(f => f && typeof f.id === 'string'),
+  muted: new Set(store.get('socMuted', []) || []),
+  dms: store.get('socDms', {}) || {},      // friend code -> [[mine 0/1, text, time], …]
+  unread: store.get('socUnread', {}) || {},
+  log: [], req: new Map(), out: [], seen: new Set(), rate: new Map(), lastSend: 0, sig: '', sigT: 0, feed: []
+};
+const socCode = (c) => c.slice(0, 4) + '-' + c.slice(4);
+const socClean = (s, n) => String(s || '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 140);
+const socFriend = (id) => SOC.friends.find(f => f.id === id);
+const socPeerOf = (id) => { for (const a of NET.peers.values()) if (a.fid === id) return a; return null; };
+const socUnreadAll = () => Object.values(SOC.unread).reduce((n, v) => n + (v || 0), 0) + SOC.req.size;
+function socSave() { store.set('friends', SOC.friends); store.set('socDms', SOC.dms); store.set('socUnread', SOC.unread); store.set('socMuted', [...SOC.muted]); }
+function socOutbox() { const now = Date.now(); SOC.out = SOC.out.filter(m => now - m.at < 7000); return SOC.out.length ? JSON.stringify(SOC.out.map(m => ({ i: m.i, k: m.k, to: m.to, x: m.x }))) : ''; }
+function socPost(k, to, x) {
+  if (!NET.room) { toast('You\'re offline right now'); return false; }
+  SOC.out.push({ i: Math.random().toString(36).slice(2, 9), k, to: to || '', x: x || '', at: Date.now() }); if (SOC.out.length > 5) SOC.out.shift();
+  NET.sendT = 0; return true;
+}
+function socSay(text, to) {
+  text = socClean(text); if (!text) return;
+  if (Date.now() - SOC.lastSend < 700) { toast('Slow down a little'); return; }
+  if (to) {
+    const f = socFriend(to); if (!f) return;
+    if (!socPeerOf(to)) { toast('<b>' + escapeHtml(f.name) + '</b> is offline. Messages only arrive while you\'re both online.'); return; }
+    if (!socPost('d', to, text)) return;
+    (SOC.dms[to] = SOC.dms[to] || []).push([1, text, Date.now()]); if (SOC.dms[to].length > 40) SOC.dms[to].shift(); socSave();
+  } else { if (!socPost('s', '', text)) return; SOC.log.push({ me: true, n: NET.name, x: text, t: Date.now() }); socFeed('You', text); }
+  SOC.lastSend = Date.now(); if (SOC.log.length > 60) SOC.log.shift(); socRefresh();
+}
+function socAdd(id, name) {
+  id = String(id || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!/^[A-Z2-9]{8}$/.test(id)) { toast('That code doesn\'t look right. It\'s 8 letters and numbers.'); return false; }
+  if (id === SOC.id) { toast('That\'s your own code'); return false; }
+  if (socFriend(id)) { toast('Already on your friends list'); return false; }
+  if (SOC.friends.length >= 100) { toast('Your friends list is full'); return false; }
+  const a = socPeerOf(id);
+  SOC.friends.push({ id, name: netCleanName(name || (a && a.name)) || 'Skater ' + id.slice(0, 4), mutual: SOC.req.has(id) }); SOC.req.delete(id); socSave();
+  if (a) socPost('a', id, '');
+  toast('<b>Friend added</b> ' + escapeHtml(socFriend(id).name) + (a ? '' : ' · they\'ll show as online when they play')); socRefresh(); return true;
+}
+function socRemove(id) { SOC.friends = SOC.friends.filter(f => f.id !== id); delete SOC.dms[id]; delete SOC.unread[id]; socSave(); }
+// called for every presence update from another player
+function socPeer(a, pr) {
+  const fid = typeof pr.f === 'string' && /^[A-Z2-9]{8}$/.test(pr.f) && pr.f !== SOC.id ? pr.f : '';
+  if (fid !== a.fid) { a.fid = fid; const f = fid && socFriend(fid); if (f) socPost('a', fid, ''); } // say hi so both sides know they're friends
+  const f = a.fid && socFriend(a.fid); if (f && a.name && a.name !== 'Skater' && a.name !== f.name) { f.name = a.name; socSave(); }
+  if (!a.fid || typeof pr.c !== 'string' || pr.c === a.cStr || pr.c.length > 2500) return;
+  a.cStr = pr.c; let list; try { list = JSON.parse(pr.c || '[]'); } catch (e) { return; }
+  if (!Array.isArray(list)) return;
+  for (const m of list.slice(0, 5)) {
+    if (!m || typeof m.i !== 'string' || typeof m.k !== 'string') continue;
+    const key = a.fid + ':' + m.i; if (SOC.seen.has(key)) continue; SOC.seen.add(key); if (SOC.seen.size > 600) SOC.seen = new Set([...SOC.seen].slice(-300));
+    const r = SOC.rate.get(a.fid) || { n: 0, t: 0 }, now = Date.now(); if (now - r.t > 10000) { r.n = 0; r.t = now; } r.n++; SOC.rate.set(a.fid, r); if (r.n > 8) continue;
+    if (SOC.muted.has(a.fid)) continue;
+    const text = socClean(m.x), fr = socFriend(a.fid);
+    if (m.k === 's') { if (!text || a.map !== curMap) continue; SOC.log.push({ fid: a.fid, n: a.name, x: text, t: now }); if (SOC.log.length > 60) SOC.log.shift(); socFeed(a.name, text); }
+    else if (m.to !== SOC.id) continue;
+    else if (m.k === 'a') { if (fr) { if (!fr.mutual) { fr.mutual = true; socSave(); } } else if (!SOC.req.has(a.fid)) { SOC.req.set(a.fid, a.name); toast('<b>' + escapeHtml(a.name) + '</b> added you as a friend. Open Friends to add them back.'); audio.tick(); } }
+    else if (m.k === 'd' && text) {
+      if (!fr) { if (!SOC.req.has(a.fid)) { SOC.req.set(a.fid, a.name); toast('<b>' + escapeHtml(a.name) + '</b> wants to chat. Open Friends to add them.'); } continue; }
+      fr.mutual = true; (SOC.dms[fr.id] = SOC.dms[fr.id] || []).push([0, text, now]); if (SOC.dms[fr.id].length > 40) SOC.dms[fr.id].shift();
+      const open = curScreen() && curScreen().id === 'dm' && curScreen().fid === fr.id;
+      if (!open) { SOC.unread[fr.id] = (SOC.unread[fr.id] || 0) + 1; toast('<b>' + escapeHtml(fr.name) + '</b> ' + escapeHtml(text.slice(0, 60))); audio.tick(); }
+      socSave();
+    }
+  }
+  socRefresh();
+}
+// a few chat lines over the game while you skate
+function socFeed(name, text) {
+  const el = $('chatfeed'); if (!el) return;
+  const d = document.createElement('div'); d.innerHTML = '<b>' + escapeHtml(name) + '</b> ' + escapeHtml(text); el.appendChild(d);
+  SOC.feed.push({ d, t: 8 }); while (SOC.feed.length > 4) SOC.feed.shift().d.remove();
+}
+function socRefresh() { const s = curScreen(); if (s && (s.id === 'social' || s.id === 'dm') && !TYPER.on) renderScreen(); socBadge(); }
+function socBadge() { const n = socUnreadAll(), b = $('tbChat'); if (b) b.classList.toggle('new', n > 0); }
+function socTick(dt) {
+  for (const f of SOC.feed) f.t -= dt; while (SOC.feed.length && SOC.feed[0].t <= 0) SOC.feed.shift().d.remove();
+  SOC.sigT -= dt; if (SOC.sigT > 0) return; SOC.sigT = 0.6;
+  const sig = SOC.friends.map(f => { const a = socPeerOf(f.id); return a ? f.id + (a.map || '') : ''; }).join('|') + '#' + NET.peers.size + (NET.room ? 1 : 0);
+  if (sig !== SOC.sig) { SOC.sig = sig; socRefresh(); }
+}
+function socShareCode() {
+  const txt = 'Add me on STEEZE! My friend code is ' + socCode(SOC.id);
+  const done = () => toast('<b>Copied</b> your friend code ' + socCode(SOC.id)), fail = () => toast('Your friend code is <b>' + socCode(SOC.id) + '</b>');
+  try { if (inp.mode === 'touch' && navigator.share) { navigator.share({ text: txt }).catch(() => { }); return; } navigator.clipboard.writeText(socCode(SOC.id)).then(done, fail); } catch (e) { fail(); }
+}
+const socAgo = (t) => { const s = (Date.now() - t) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
+const socOn = '<span style="color:#7fd18b">&#9679; Online</span>', socOff = '<span style="opacity:.55">Offline</span>';
+function socialScreen(tab) {
+  const write = () => openTyper({ title: 'Say something to everyone at this spot', done: (t) => socSay(t) });
+  return {
+    id: 'social', title: 'Friends &amp; Chat', tab: tab || 0,
+    tabs: [
+      { label: 'Chat', items: () => [
+        { label: 'Write a message', big: true, sub: NET.room ? 'Everyone skating at this spot sees it' : 'You\'re offline right now', run: write },
+        { type: 'section', label: 'Session chat' },
+        ...(SOC.log.length ? SOC.log.slice().reverse().map(m => ({ label: m.me ? 'You' : m.n, sub: escapeHtml(m.x), value: socAgo(m.t), run: () => { if (m.me) write(); else openScreen(playerScreen(m.fid, m.n)); } })) : [{ label: 'Nothing yet', sub: 'Messages from skaters at this spot show up here', run: write }])
+      ] },
+      { label: 'Friends' + (socUnreadAll() ? ' (' + socUnreadAll() + ')' : ''), items: () => [
+        { label: 'Add a friend by code', big: true, sub: 'Type the 8-character code they give you', run: () => openTyper({ title: 'Type your friend\'s code', code: true, done: (t) => socAdd(t) }) },
+        { label: 'Your friend code', value: '<b style="color:var(--curb);letter-spacing:.08em">' + socCode(SOC.id) + '</b>', sub: inp.mode === 'touch' ? 'Tap to share it' : 'Select to copy it, then send it to a friend', run: socShareCode },
+        ...(SOC.req.size ? [{ type: 'section', label: 'Added you' }, ...[...SOC.req].map(([id, n]) => ({ label: n, sub: 'Select to add them back', value: 'Add', run: () => socAdd(id, n) }))] : []),
+        { type: 'section', label: 'Friends (' + SOC.friends.length + ')' },
+        ...(SOC.friends.length ? SOC.friends.slice().sort((a, b) => (socPeerOf(b.id) ? 1 : 0) - (socPeerOf(a.id) ? 1 : 0) || a.name.localeCompare(b.name)).map(f => {
+          const a = socPeerOf(f.id), u = SOC.unread[f.id] || 0;
+          return { label: f.name, sub: a ? 'At ' + escapeHtml((MAPS[a.map] || {}).name || 'the menu') : f.mutual ? '' : 'Hasn\'t added you back yet', value: (u ? '<b style="color:var(--curb)">' + u + ' new</b> · ' : '') + (a ? socOn : socOff), run: () => openScreen(dmScreen(f.id)) };
+        }) : [{ label: 'No friends yet', sub: 'Add someone with their code, or from the Players tab', run: () => { } }])
+      ] },
+      { label: 'Players', items: () => {
+        const ps = [...NET.peers.values()].filter(a => a.fid);
+        return [{ type: 'section', label: 'Online right now (' + ps.length + ')' },
+          ...(ps.length ? ps.map(a => ({ label: a.name, sub: 'At ' + escapeHtml((MAPS[a.map] || {}).name || 'the menu'), value: socFriend(a.fid) ? 'Friend' : 'Add friend', run: () => { if (socFriend(a.fid)) openScreen(playerScreen(a.fid, a.name)); else socAdd(a.fid, a.name); } })) : [{ label: NET.room ? 'Nobody else is online' : 'You\'re offline right now', sub: 'Share your friend code so friends can find you', run: () => { } }])];
+      } }
+    ],
+    side: () => '<h3>Friends &amp; chat</h3><p>Your friend code is <b style="color:var(--curb)">' + socCode(SOC.id) + '</b>. Give it to a friend, or add skaters from the Players tab.</p><p style="opacity:.7">Friends are saved on this device. Messages only arrive while you\'re both online.</p><p style="opacity:.7">Open this anytime: ' + (inp.mode === 'touch' ? 'tap the chat button' : inp.mode === 'pad' ? 'press ' + glyph('Left') : 'press Enter') + '.</p>'
+  };
+}
+function dmScreen(fid) {
+  const write = () => openTyper({ title: 'Message ' + (socFriend(fid) || {}).name, done: (t) => socSay(t, fid) });
+  return {
+    id: 'dm', fid, get title() { const f = socFriend(fid); return f ? escapeHtml(f.name) : 'Friend'; },
+    items: () => {
+      const f = socFriend(fid) || { name: 'Friend' }, a = socPeerOf(fid), ms = SOC.dms[fid] || [];
+      if (SOC.unread[fid]) { delete SOC.unread[fid]; socSave(); socBadge(); }
+      return [
+        { label: 'Write a message', big: true, sub: a ? 'Only ' + escapeHtml(f.name) + ' sees it' : escapeHtml(f.name) + ' is offline', value: a ? socOn : socOff, run: write },
+        ...(!f.mutual ? [{ type: 'section', label: 'They\'ll see your messages once they add you back' }] : []),
+        { type: 'section', label: 'Messages' },
+        ...(ms.length ? ms.slice().reverse().map(m => ({ label: m[0] ? 'You' : f.name, sub: escapeHtml(m[1]), value: socAgo(m[2]), run: write })) : [{ label: 'No messages yet', run: write }]),
+        { type: 'section', label: 'Friend' },
+        { label: SOC.muted.has(fid) ? 'Unmute' : 'Mute', sub: 'Muted players can\'t message you', run: () => { SOC.muted.has(fid) ? SOC.muted.delete(fid) : SOC.muted.add(fid); socSave(); renderScreen(); } },
+        { label: SOC.rmArm === fid ? 'Press again to remove' : 'Remove friend', run: () => { if (SOC.rmArm === fid) { SOC.rmArm = null; socRemove(fid); closeScreen(); toast('Friend removed'); } else { SOC.rmArm = fid; renderScreen(); } } }
+      ];
+    }
+  };
+}
+function playerScreen(fid, name) {
+  return {
+    id: 'player', title: escapeHtml(name || 'Skater'),
+    items: () => [
+      ...(socFriend(fid) ? [{ label: 'Message', big: true, run: () => openScreen(dmScreen(fid), true) }] : [{ label: 'Add friend', big: true, run: () => { socAdd(fid, name); closeScreen(); } }]),
+      { label: SOC.muted.has(fid) ? 'Unmute' : 'Mute', sub: 'Hide this player\'s messages', run: () => { SOC.muted.has(fid) ? SOC.muted.delete(fid) : SOC.muted.add(fid); socSave(); renderScreen(); } }
+    ]
+  };
+}
+
+/* ---- typing: the phone or PC keyboard, or an on-screen one for controllers ---- */
+const TYPER = { on: false, done: null, code: false, shift: false, kx: 0, ky: 1, mode: '', rep: { dir: null, t: 0 } };
+const TY_ROWS = ['1234567890', 'qwertyuiop', 'asdfghjkl\'', 'zxcvbnm,.?'];
+const TY_LAST = [['shift', 'Shift', 2], ['space', 'Space', 4], ['del', 'Delete', 2], ['send', 'Send', 2]];
+function openTyper(o) {
+  Object.assign(TYPER, { on: true, done: o.done, code: !!o.code, shift: !!o.code, kx: 0, ky: 1, mode: '' });
+  const el = $('tyIn'); el.value = ''; el.maxLength = o.code ? 9 : 140; el.placeholder = o.code ? 'ABCD-2345' : 'Type here';
+  el.autocapitalize = o.code ? 'characters' : 'sentences';
+  $('tyTitle').textContent = o.title || ''; $('typer').hidden = false;
+  if (inp.mode !== 'pad') el.focus(); // must happen inside the tap so phones open their keyboard
+  typerRender();
+}
+function closeTyper(send) {
+  if (!TYPER.on) return; const v = $('tyIn').value, cb = TYPER.done;
+  TYPER.on = false; TYPER.done = null; $('tyIn').blur(); $('typer').hidden = true; keyDown.clear(); pad.down.clear();
+  if (send && cb && v.trim()) cb(v); else renderScreen();
+}
+function typerRender() {
+  TYPER.mode = inp.mode; const padOn = inp.mode === 'pad', k = $('tyKeys'); k.hidden = !padOn;
+  if (padOn) {
+    k.innerHTML = TY_ROWS.map((r, y) => [...r].map((c, x) => '<button class="tk' + (TYPER.ky === y && TYPER.kx === x ? ' on' : '') + '" data-k="' + (c === '\'' ? '&#39;' : c) + '">' + (TYPER.shift ? c.toUpperCase() : c) + '</button>').join('')).join('')
+      + (() => { let x = 0; return TY_LAST.map(([id, l, w]) => { const on = TYPER.ky === 4 && TYPER.kx >= x && TYPER.kx < x + w; x += w; return '<button class="tk wide' + (on ? ' on' : '') + (id === 'shift' && TYPER.shift ? ' lit' : '') + '" style="grid-column:span ' + w + '" data-k="' + id + '">' + l + '</button>'; }).join(''); })();
+    k.querySelectorAll('[data-k]').forEach(b => b.onclick = () => typerKey(b.dataset.k));
+  }
+  $('tyFoot').innerHTML = padOn ? [['A', 'Type'], ['X', 'Delete'], ['Y', 'Space'], ['LB', 'Shift'], ['Menu', 'Send'], ['B', 'Cancel']].map(([g, l]) => '<span>' + glyph(g, null, 'menu') + l + '</span>').join('')
+    : '<button id="tyCancel">Cancel</button><button id="tySend" class="go">Send</button>';
+  if (!padOn) { $('tyCancel').onclick = () => closeTyper(false); $('tySend').onclick = () => closeTyper(true); }
+}
+function typerKey(k) {
+  const el = $('tyIn');
+  if (k === 'send') return closeTyper(true);
+  if (k === 'shift') TYPER.shift = !TYPER.shift;
+  else if (k === 'del') el.value = el.value.slice(0, -1);
+  else if (el.value.length < el.maxLength) { el.value += k === 'space' ? ' ' : TYPER.shift ? k.toUpperCase() : k; if (TYPER.shift && !TYPER.code) TYPER.shift = false; }
+  audio.tick(); typerRender();
+}
+function typerInput(dt) {
+  if (inp.mode !== TYPER.mode) { typerRender(); if (inp.mode !== 'pad') $('tyIn').focus(); else $('tyIn').blur(); }
+  if (keyDown.has('Escape')) return closeTyper(false);
+  if (keyDown.has('Enter')) return closeTyper(true);
+  if (inp.mode !== 'pad') return;
+  const dir = pad.cur.Up || inp.gly < -0.6 ? 'up' : pad.cur.Down || inp.gly > 0.6 ? 'down' : pad.cur.Left || inp.glx < -0.6 ? 'left' : pad.cur.Right || inp.glx > 0.6 ? 'right' : null, r = TYPER.rep;
+  let go = false; if (dir !== r.dir) { r.dir = dir; r.t = 0; go = !!dir; } else if (dir) { r.t += dt; if (r.t > 0.34) { r.t -= 0.09; go = true; } }
+  if (go) {
+    if (dir === 'up') TYPER.ky = (TYPER.ky + 4) % 5; else if (dir === 'down') TYPER.ky = (TYPER.ky + 1) % 5;
+    else if (TYPER.ky < 4) TYPER.kx = (TYPER.kx + (dir === 'left' ? 9 : 1)) % 10;
+    else { let x = 0, i = 0; for (; i < TY_LAST.length; i++) { if (TYPER.kx < x + TY_LAST[i][2]) break; x += TY_LAST[i][2]; } i = (i + (dir === 'left' ? TY_LAST.length - 1 : 1)) % TY_LAST.length; TYPER.kx = TY_LAST.slice(0, i).reduce((n, k) => n + k[2], 0); }
+    audio.tick(); typerRender();
+  }
+  if (pad.down.has('A')) { if (TYPER.ky < 4) typerKey(TY_ROWS[TYPER.ky][TYPER.kx]); else { let x = 0; for (const [id, , w] of TY_LAST) { if (TYPER.kx < x + w) { typerKey(id); break; } x += w; } } }
+  else if (pad.down.has('X')) typerKey('del');
+  else if (pad.down.has('Y')) typerKey('space');
+  else if (pad.down.has('LB')) typerKey('shift');
+  else if (pad.down.has('Menu')) closeTyper(true);
+  else if (pad.down.has('B')) closeTyper(false);
+}
+$('tyIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); closeTyper(true); } else if (e.key === 'Escape') { e.preventDefault(); closeTyper(false); } });
+$('tyIn').addEventListener('input', (e) => { if (TYPER.code) e.target.value = e.target.value.toUpperCase(); });
+
+/* =========================================================================
    GAME LOOP
    ========================================================================= */
 let clock = 0, acc = 0, last = performance.now();
@@ -6796,7 +7250,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (!(window.__steeze && window.__steeze.hold)) tick(dt);
   if (window.__steeze && window.__steeze.camOverride) window.__steeze.camOverride(camera, P, skater);
-  extPose(); try { netTick(dt); } catch (e) { } touchUiTick(); MYM.state = myTick(dt); audio.musicTick(); if (BOOT.active && !BOOT.leaving && mode !== 'title' && mode !== 'menu') bootQuiet(); const drew = menuBgTick(now) || !!(window.__steeze && window.__steeze.camOverride); if (drew) renderer.render(scene, camera);
+  extPose(); try { netTick(dt); socTick(dt); } catch (e) { } touchUiTick(); MYM.state = myTick(dt); audio.musicTick(); if (BOOT.active && !BOOT.leaving && mode !== 'title' && mode !== 'menu') bootQuiet(); const drew = menuBgTick(now) || !!(window.__steeze && window.__steeze.camOverride); if (drew) renderer.render(scene, camera);
   if (drew && previewDue && now > previewDue && (mode === 'play' || mode === 'title')) { // remember what this spot looks like for the spot menu
     previewDue = 0;
     try { const c = document.createElement('canvas'); c.width = 384; c.height = 216; const g = c.getContext('2d'); const a = canvas.width / canvas.height, sw = a > 16 / 9 ? canvas.height * 16 / 9 : canvas.width, sh = sw * 9 / 16; g.drawImage(canvas, (canvas.width - sw) / 2, (canvas.height - sh) / 2, sw, sh, 0, 0, 384, 216); store.set('prev_' + curMap + '_' + S.tod, c.toDataURL('image/jpeg', 0.72)); } catch (e) { }
@@ -6807,7 +7261,7 @@ function tick(dt) {
   if (window.__steeze && window.__steeze.override) window.__steeze.override(inp, pad);
   if (mode === 'play') gameTick(dt);
   else if (mode === 'menu' || mode === 'title') {
-    if (BOOT.active) bootTick(dt); else menuInput(dt);
+    if (BOOT.active) bootTick(dt); else if (TYPER.on) typerInput(dt); else menuInput(dt);
     clock += dt;
     if (CL.on) closetTick(dt);
     if (mode === 'title') { animate(dt, clock); camState.orbit = 0.8; stepCamera(0, true); updateTOD(dt); }
@@ -6827,6 +7281,7 @@ function gameTick(dt) {
   const menuB = tapHold('Menu', 0.45); // tap Menu pauses, hold it for the quick music panel
   if (menuB === 'tap' || keyDown.has('Escape') || keyDown.has('KeyP')) { openScreen(pauseScreen()); return; }
   if (menuB === 'hold' || pad.down.has('Music') || keyDown.has('KeyM')) { openScreen(musicScreen()); return; }
+  if (pad.down.has('Chat') || (pad.down.has('Left') && !pad.cur.LB) || keyDown.has('Enter')) { openScreen(socialScreen(socUnreadAll() ? 1 : 0)); return; } // friends & chat
   const view = tapHold('View', 0.35);
   if (view === 'tap') { setMode2('map'); return; }
   if (view === 'hold') { openReplay(); return; }
@@ -6837,9 +7292,8 @@ function gameTick(dt) {
   }
   const lbEat = pad.cur.LB || pad.up.has('LB');
   const up = lbEat ? null : tapHold('Up', 0.6);
-  if (up === 'tap') { if (P.marker && P.state !== 'bail') { loseLineQuiet(); respawn(P.marker); } else if (!P.marker) toast('No marker yet. Hold ' + glyph('Up') + ' while rolling to set one.'); }
-  if (up === 'hold') { if (P.state === 'ground') setMarker(); else toast('Get on the ground to drop a marker'); }
-  if (!lbEat && tapHold('Down', 0.8) === 'hold') { P.marker = null; loseLineQuiet(); respawn(SPAWN); toast('Back at the roll-in'); }
+  if (up === 'tap') { if (P.marker && P.state !== 'bail') { loseLineQuiet(); respawn(P.marker); } else if (!P.marker) toast('No marker yet. Hold ' + glyph('Up') + ' to set one.'); }
+  if (up === 'hold') { if (canMark()) setMarker(); else toast('Land first, then drop a marker'); }
   if (pad.down.has('Right') && !lbEat) { setSetting('monitor', !S.monitor); }
   if (pad.down.has('Y')) {
     if (P.state === 'ground') getOff();
