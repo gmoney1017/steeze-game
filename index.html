@@ -6553,7 +6553,7 @@ addEventListener('keydown', () => { if (BOOT.active) audio.unlock(); }, true);
 function bootOnline() {
   const el = $('bootOnline'), el2 = $('bootOnline2'); if (!NET.room) { el.hidden = el2.hidden = true; return; }
   const n = [...NET.peers.values()].filter(a => !a.hidden).length;
-  el.hidden = el2.hidden = false; el.textContent = el2.textContent = n ? n + (n === 1 ? ' skater' : ' skaters') + ' online now' : 'Online · be the first one here';
+  el.hidden = el2.hidden = !n; el.textContent = el2.textContent = n ? n + (n === 1 ? ' skater' : ' skaters') + ' online now' : '';
 }
 function bootQuiet() { // something went straight into play (a reload mid-session): just get out of the way
   BOOT.active = false; BOOT.leaving = false; $('boot').hidden = true; document.body.classList.remove('booting');
