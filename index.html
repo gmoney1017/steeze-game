@@ -4930,8 +4930,6 @@ function buildRailYard() { // (MAPS.yard still calls this name)
   for (const z of [-17.4, -14.4]) wallPlane(new THREE.PlaneGeometry(0.95, 1.9), HM.blueSolid, MX1 + 0.02, 0.95, z, Math.PI / 2);
   wallPlane(new THREE.PlaneGeometry(1.6, 0.9), A.glass, MX1 + 0.02, 1.35, -25, Math.PI / 2);
   bank(-6.2, -22, -Math.PI / 2, 5.8, 4, 0, MH);                                                   // roll-in
-  for (const z of [-24.15, -19.85]) put(cyl(0.04, 0.04, 1.1, 6), HM.yellow, MX1 - 0.15, MH, z);
-  put(new THREE.CylinderGeometry(0.03, 0.03, 4.3, 6).rotateX(Math.PI / 2), HM.yellow, MX1 - 0.15, MH + 1.1, -22, 0, { uv: false });
   blueRail(MX1 - 0.05, MZ0, MX1 - 0.05, -24.2, MH, 1.05, { bars: true }); blueRail(MX1 - 0.05, -19.8, MX1 - 0.05, MZ1 - 0.05, MH, 1.05, { bars: true });
   blueRail(-HX, MZ1 - 0.05, -15.7, MZ1 - 0.05, MH, 1.05, { bars: true }); blueRail(-13.3, MZ1 - 0.05, MX1 - 0.05, MZ1 - 0.05, MH, 1.05, { bars: true });
   const st = stairs(-14.5, MZ1, 0, 2.2, 9, MH / 9, 0.3, 0, HM.ply);
@@ -5099,6 +5097,23 @@ const audio = {
    ========================================================================= */
 const camState = { yaw: 0, pos: new THREE.Vector3(), look: new THREE.Vector3(), snap: true, orbit: 0, shake: 0, fov: S.fov };
 function camShake(a) { if (S.camShake) camState.shake = Math.max(camState.shake, a); }
+// keep the camera on the player's side of solid walls: walk out from the head and stop short of the first wall
+function camBlock(base, target) {
+  const hx = base.x, hy = base.y + 1.2, hz = base.z, dx = target.x - hx, dy = target.y - hy, dz = target.z - hz, len = Math.hypot(dx, dy, dz);
+  if (len < 0.3) return;
+  const n = Math.ceil(len / 0.15); let ok = 0;
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, x = hx + dx * t, y = hy + dy * t, z = hz + dz * t, g = sampleGround(x, z, y);
+    if (g.wall && !g.wall.invisible && g.wallH > y - 0.05) break;
+    ok = t;
+  }
+  if (ok < 1) { // no room behind: come in close and rise up over the shoulder instead of sitting in the wall or the head
+    const k = Math.max(0, ok - 0.3 / len), lost = (1 - k) * Math.hypot(dx, dz);
+    target.set(hx + dx * k, Math.min(hy + dy * k + lost * 0.85, base.y + 3.4), hz + dz * k);
+  }
+  camClampHall(target);
+}
+function camClampHall(v) { const hb = MAPS[curMap] && MAPS[curMap].hard; if (!hb) return; v.x = clamp(v.x, hb[0] + 0.12, hb[2] - 0.12); v.z = clamp(v.z, hb[1] + 0.12, hb[3] - 0.12); }
 function stepCamera(dt, attract) {
   if (attract) {
     camState.orbit += dt * 0.07;
@@ -5125,11 +5140,13 @@ function stepCamera(dt, attract) {
   const target = new THREE.Vector3(base.x - fx * dist, refY + height, base.z - fz * dist);
   const gc = groundTop(target.x, target.z);
   target.y = Math.max(target.y, gc + 0.35);
+  camBlock(base, target);
   const lookY = P.state === 'walk' || P.state === 'trans' ? base.y + 1.05 : base.y + (P.state === 'plant' ? 1.4 : 0.75);
   const look = new THREE.Vector3(base.x + fx * 1.3, lookY, base.z + fz * 1.3);
   if (camState.snap) { camState.pos.copy(target); camState.look.copy(look); camState.snap = false; }
   camState.pos.lerp(target, Math.min(1, dt * 8));
   camState.look.lerp(look, Math.min(1, dt * 12));
+  camClampHall(camState.pos);
   camera.position.copy(camState.pos);
   if (camState.shake > 0.001) {
     const s = camState.shake;
